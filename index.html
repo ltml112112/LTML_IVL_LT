@@ -401,17 +401,17 @@ function renderTbl(tblId,blocks,ivl,ltLv){
     const lv1=ltLv[b.lt1],lv2=ltLv[b.lt2];
 
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
-    // Row 1
+    // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
-    if(d1)h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`;
+    if(d1)h+=fTd(d1.volt,2)+fTd(d1.eff,2)+fTd(d1.eqe,2)+fTd(d1.cx,3)+fTd(d1.cy,3)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(ivlDP):'-'}</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
     h+='</tr>';
-    // Row 2
+    // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
-    if(d2)h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`;
+    if(d2)h+=fTd(d2.volt,2)+fTd(d2.eff,2)+fTd(d2.eqe,2)+fTd(d2.cx,3)+fTd(d2.cy,3)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(ivlDP):'-'}</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
     h+='</tr>';
     // Eval
     h+='<tr class="ev"><td>Result</td>';
@@ -437,9 +437,8 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   return bi>0;
 }
 
-function nTd(v,d){
+function fTd(v,dp){
   if(isNaN(v))return'<td>-</td>';
-  const dp=Math.max(0,d-(2-ivlDP));
   return`<td>${v.toFixed(dp)}</td>`;
 }
 
