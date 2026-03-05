@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLED IVL & LT Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--card:#161b22;--bdr:#30363d;--input:#0d1117;
+  --tx:#e6edf3;--tx2:#7d8590;--acc:#58a6ff;--red:#f85149;
+  --hdr:#21262d;--row1:#161b22;--row2:#1c2129;
+}
+body{font-family:Consolas,'Courier New',monospace;background:var(--bg);color:var(--tx);font-size:13px;line-height:1.5}
+.wrap{max-width:1400px;margin:0 auto;padding:1rem}
+header{text-align:center;margin-bottom:1rem}
+header h1{font-size:1.3rem;color:var(--acc);letter-spacing:1px}
+header p{color:var(--tx2);font-size:.8rem}
+
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:6px;padding:1rem;margin-bottom:1rem;position:relative}
+.card h2{font-size:.9rem;color:var(--acc);margin-bottom:.6rem;border-bottom:1px solid var(--bdr);padding-bottom:.4rem}
+
+/* Drop Zone */
+.dz{border:2px dashed var(--bdr);border-radius:6px;padding:2rem;text-align:center;cursor:pointer;transition:.2s}
+.dz:hover,.dz.over{border-color:var(--acc);background:#161b22}
+.dz input{display:none}
+.dz .ic{font-size:2rem}
+.dz-hint{color:var(--tx2);font-size:.75rem;margin-top:.3rem}
+
+/* File Grid */
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.4rem}
+.fs{display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border:1px solid var(--bdr);border-radius:4px;font-size:.78rem}
+.fs.ok{border-color:#238636;background:#0d1117}
+.fs .lb{font-weight:700;min-width:95px;color:var(--acc)}
+.fs .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+.fs .st{flex-shrink:0}
+.fs .mb{background:var(--bdr);border:none;color:var(--tx2);padding:1px 5px;border-radius:3px;cursor:pointer;font-size:.7rem}
+.fs .mb:hover{background:var(--acc);color:#000}
+.fs input[type=file]{display:none}
+.um{margin-top:.4rem;padding:.4rem .6rem;background:#2d1b00;border:1px solid #6e4000;border-radius:4px;font-size:.75rem;color:#d29922}
+
+/* Button */
+.btn{display:block;width:100%;padding:.7rem;font-size:.9rem;font-weight:700;color:#fff;background:var(--acc);border:none;border-radius:4px;cursor:pointer;font-family:inherit;transition:.2s}
+.btn:hover{background:#1f6feb}
+.btn:disabled{background:#30363d;color:var(--tx2);cursor:default}
+
+/* Tables */
+.tw{overflow-x:auto}
+.t{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
+.t th,.t td{border:1px solid var(--bdr);padding:4px 8px;text-align:center}
+.t th{background:var(--hdr);color:var(--acc);font-weight:600;position:sticky;top:0;z-index:1}
+.t .bh{background:#1c2333;color:var(--tx);font-weight:700;text-align:left;font-size:.8rem}
+.t .r1 td{background:var(--row1)}
+.t .r2 td{background:var(--row2)}
+.t .ev td{background:#0d1a2d;font-weight:700}
+.t td.blue{color:var(--acc)}
+.t td.red{color:var(--red)}
+.t td:first-child{text-align:left;font-weight:600}
+
+/* Copy Button */
+.cpb{position:absolute;top:8px;right:8px;background:var(--bdr);border:1px solid #484f58;color:var(--tx2);padding:2px 10px;border-radius:3px;cursor:pointer;font-size:.7rem;font-family:inherit}
+.cpb:hover{background:var(--acc);color:#000}
+.cpb.done{background:#238636;color:#fff}
+
+/* Chart */
+.ch-wrap{position:relative;height:450px;background:#0d1117;border:1px solid var(--bdr);border-radius:4px;padding:4px}
+
+/* Controls */
+.ctrl{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem;font-size:.75rem}
+.ctrl label{display:flex;align-items:center;gap:3px;color:var(--tx2)}
+.ctrl input[type=number]{width:60px;background:var(--input);border:1px solid var(--bdr);color:var(--tx);padding:2px 4px;border-radius:3px;font-family:inherit;font-size:.75rem;text-align:center}
+.ctrl input[type=checkbox]{accent-color:var(--acc)}
+.ctrl button{background:var(--bdr);border:1px solid #484f58;color:var(--tx);padding:2px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.75rem}
+.ctrl button:hover{background:var(--acc);color:#000}
+.ctrl button.active{background:var(--acc);color:#000}
+.ctrl .sep{width:1px;height:16px;background:var(--bdr);margin:0 4px}
+
+.hidden{display:none}
+.results{animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.65rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+    <h1>OLED IVL &amp; LT Analyzer</h1>
+    <p>Raw Data CSV Upload &rarr; Auto Analysis &rarr; Chart</p>
+</header>
+
+<div class="card">
+    <h2>FILE UPLOAD</h2>
+    <div class="dz" id="dz">
+        <div class="ic">&#128194;</div>
+        <p>CSV 파일 드래그 &amp; 드롭 또는 클릭</p>
+        <p class="dz-hint">IVL + LT (REF/SAMPLE 1,2) - 4~8개 파일</p>
+        <input type="file" id="fi" multiple accept=".csv">
+    </div>
+</div>
+
+<div class="card">
+    <h2>FILE MATCHING</h2>
+    <div class="fg" id="fg"></div>
+    <div id="um" class="hidden"></div>
+</div>
+
+<div class="card">
+    <button class="btn" id="abtn" disabled>파일을 업로드하세요</button>
+</div>
+
+<div id="res" class="hidden results">
+    <!-- IVL -->
+    <div class="card">
+        <h2>IVL ANALYSIS</h2>
+        <button class="cpb" onclick="copyTbl('ivlT')">COPY</button>
+        <div class="tw"><table class="t" id="ivlT"></table></div>
+    </div>
+
+    <!-- LT Detail -->
+    <div class="card" id="ltdCard">
+        <h2>LT LIFETIME (T95 ~ T90)</h2>
+        <button class="cpb" onclick="copyTbl('ltdT')">COPY</button>
+        <div class="tw"><table class="t" id="ltdT"></table></div>
+    </div>
+
+    <!-- LT Chart -->
+    <div class="card" id="ltcCard">
+        <h2>LT CHART</h2>
+        <div class="ctrl" id="ltCtrl"></div>
+        <div class="ch-wrap"><canvas id="ltC"></canvas></div>
+    </div>
+
+    <!-- Spectrum -->
+    <div class="card" id="spCard">
+        <h2>IVL SPECTRUM (@J=10mA/cm&sup2;)</h2>
+        <div class="ch-wrap"><canvas id="spC"></canvas></div>
+    </div>
+</div>
+
+<footer>OLED Analyzer v2.0</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ===== CONFIG ===== */
+const S={
+  REF_IVL1:{l:'REF IVL-1',t:'IVL',g:'REF',n:'1'},
+  REF_IVL2:{l:'REF IVL-2',t:'IVL',g:'REF',n:'2'},
+  SAMPLE_IVL1:{l:'SAMPLE IVL-1',t:'IVL',g:'SAMPLE',n:'1'},
+  SAMPLE_IVL2:{l:'SAMPLE IVL-2',t:'IVL',g:'SAMPLE',n:'2'},
+  REF_LT1:{l:'REF LT-1',t:'LT',g:'REF',n:'1'},
+  REF_LT2:{l:'REF LT-2',t:'LT',g:'REF',n:'2'},
+  SAMPLE_LT1:{l:'SAMPLE LT-1',t:'LT',g:'SAMPLE',n:'1'},
+  SAMPLE_LT2:{l:'SAMPLE LT-2',t:'LT',g:'SAMPLE',n:'2'},
+};
+
+const BLOCKS=[
+  {lb:'REF1 vs SAMPLE1',r1:'REF_IVL1',r2:'SAMPLE_IVL1',lt1:'REF_LT1',lt2:'SAMPLE_LT1'},
+  {lb:'REF1 vs SAMPLE2',r1:'REF_IVL1',r2:'SAMPLE_IVL2',lt1:'REF_LT1',lt2:'SAMPLE_LT2'},
+  {lb:'REF2 vs SAMPLE1',r1:'REF_IVL2',r2:'SAMPLE_IVL1',lt1:'REF_LT2',lt2:'SAMPLE_LT1'},
+  {lb:'REF2 vs SAMPLE2',r1:'REF_IVL2',r2:'SAMPLE_IVL2',lt1:'REF_LT2',lt2:'SAMPLE_LT2'},
+  {lb:'SAMPLE1 vs SAMPLE2',r1:'SAMPLE_IVL1',r2:'SAMPLE_IVL2',lt1:'SAMPLE_LT1',lt2:'SAMPLE_LT2'},
+  {lb:'REF1 vs REF2',r1:'REF_IVL1',r2:'REF_IVL2',lt1:'REF_LT1',lt2:'REF_LT2'},
+];
+
+const COL={REF_LT1:'#4a9eff',REF_LT2:'#a855f7',SAMPLE_LT1:'#ef4444',SAMPLE_LT2:'#f59e0b',
+           REF_IVL1:'#4a9eff',REF_IVL2:'#a855f7',SAMPLE_IVL1:'#ef4444',SAMPLE_IVL2:'#f59e0b'};
+
+const LT_LEVELS=[95,94,93,92,91,90];
+
+/* ===== STATE ===== */
+const fm={}, pd={};
+let ltCI=null, spCI=null;
+const unm=[];
+
+const $=id=>document.getElementById(id);
+const dz=$('dz'),fi=$('fi'),fg=$('fg'),abtn=$('abtn'),res=$('res');
+
+/* ===== INIT ===== */
+function init(){
+  renderGrid();
+  dz.onclick=()=>fi.click();
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};
+  dz.ondragleave=()=>dz.classList.remove('over');
+  dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');handleFiles(e.dataTransfer.files)};
+  fi.onchange=e=>handleFiles(e.target.files);
+  abtn.onclick=run;
+}
+
+function renderGrid(){
+  fg.innerHTML='';
+  for(const[k,s]of Object.entries(S)){
+    const d=document.createElement('div');
+    d.className='fs';d.id='s-'+k;
+    d.innerHTML=`<span class="lb">${s.l}</span><span class="fn" id="f-${k}">-</span><span class="st" id="st-${k}">&#9744;</span><button class="mb" data-k="${k}">&#128206;</button><input type="file" accept=".csv" data-k="${k}">`;
+    fg.appendChild(d);
+    d.querySelector('.mb').onclick=function(){d.querySelector('input[type=file]').click()};
+    d.querySelector('input[type=file]').onchange=function(){if(this.files.length){assign(k,this.files[0]);updBtn()}};
+  }
+}
+
+/* ===== FILE DETECT ===== */
+function detect(name){
+  const n=name.toLowerCase();
+  let g='';
+  if(/^re[fv][_\s]/i.test(n))g='REF';
+  else if(/^sample[_\s]/i.test(n))g='SAMPLE';
+  else if(n.includes('sample'))g='SAMPLE';
+  else if(n.includes('ref')||n.includes('rev'))g='REF';
+  else return null;
+  let t='',num='';
+  const iv=n.match(/ivl\s*(\d)/),lt=n.match(/(?:^|[_\s])lt\s*(\d)/);
+  if(iv){t='IVL';num=iv[1]}else if(lt){t='LT';num=lt[1]}
+  else if(n.includes('ivl')){t='IVL';num=n.includes('2')?'2':'1'}
+  else if(n.includes('lt')||n.includes('\uc218\uba85')){t='LT';num=n.includes('2')?'2':'1'}
+  else return null;
+  const k=g+'_'+t+num;
+  return S[k]?k:null;
+}
+
+function handleFiles(files){
+  unm.length=0;
+  for(const f of files){
+    if(!f.name.toLowerCase().endsWith('.csv'))continue;
+    const k=detect(f.name);
+    if(k)assign(k,f);else unm.push(f.name);
+  }
+  showUnm();updBtn();
+}
+
+function assign(k,file){
+  fm[k]=file;
+  $('s-'+k).classList.add('ok');
+  $('f-'+k).textContent=file.name;
+  $('f-'+k).title=file.name;
+  $('st-'+k).innerHTML='&#9745;';
+}
+
+function showUnm(){
+  const el=$('um');
+  if(!unm.length){el.classList.add('hidden');return}
+  el.classList.remove('hidden');
+  el.innerHTML='<div class="um">&#9888; Unmatched: '+unm.join(', ')+'</div>';
+}
+
+function updBtn(){
+  const ik=Object.keys(fm).filter(k=>S[k].t==='IVL');
+  const ok=ik.some(k=>S[k].g==='REF')&&ik.some(k=>S[k].g==='SAMPLE')||Object.keys(fm).some(k=>S[k].t==='LT');
+  abtn.disabled=!ok;
+  const c=Object.keys(fm).length;
+  abtn.textContent=ok?`ANALYZE (${c} files)`:`Upload files (${c}/8)`;
+}
+
+/* ===== CSV ===== */
+async function readF(file){
+  const buf=await file.arrayBuffer();
+  let t=new TextDecoder('utf-8').decode(buf);
+  if(t.includes('\uFFFD'))t=new TextDecoder('euc-kr').decode(buf);
+  return t;
+}
+function csv(t){return t.split(/\r?\n/).map(l=>l.trim()).filter(l=>l).map(l=>l.split(',').map(c=>c.trim()))}
+
+/* ===== IVL ===== */
+function aIVL(rows){
+  if(!rows||rows.length<2)return null;
+  const h=rows[0],d=rows.slice(1);
+  let bi=-1,md=1e9;
+  for(let i=0;i<d.length;i++){const v=parseFloat(d[i][5]);if(!isNaN(v)){const dd=Math.abs(v-10);if(dd<md){md=dd;bi=i}}}
+  if(bi<0)return null;
+  const r=d[bi];
+  let mx=-1,mwl='';
+  const spec=[];
+  for(let c=13;c<r.length;c++){
+    const wl=parseFloat(h[c]),v=parseFloat(r[c]);
+    if(!isNaN(wl)&&!isNaN(v)){spec.push({x:wl,y:v});if(v>mx){mx=v;mwl=h[c]||''}}
+  }
+  return{absJ:parseFloat(r[5]),volt:parseFloat(r[1]),eff:parseFloat(r[7]),eqe:parseFloat(r[9]),cx:parseFloat(r[10]),cy:parseFloat(r[11]),mwl,spec};
+}
+
+/* ===== LT ===== */
+function pLT(rows){
+  if(!rows||rows.length<4)return{h:[],l:[]};
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,6);i++)if(rows[i].some(c=>c.toLowerCase().includes('hour'))){hi=i;break}
+  if(hi<0)return{h:[],l:[]};
+  const h=[],l=[];
+  for(let i=hi+1;i<rows.length;i++){const hv=parseFloat(rows[i][0]),lv=parseFloat(rows[i][5]);if(!isNaN(hv)&&!isNaN(lv)){h.push(hv);l.push(lv)}}
+  return{h,l};
+}
+
+function ltAll(hours,lum){
+  const r={};
+  for(const lv of LT_LEVELS){
+    let di=-1,rec=false;
+    for(let i=0;i<lum.length;i++){
+      if(lum[i]<lv&&di===-1)di=i;
+      if(di!==-1&&i>di&&lum[i]>=lv){rec=true;break}
+    }
+    r[lv]=di!==-1&&!rec?{hr:hours[di],pct:lum[di]}:null;
+  }
+  return r;
+}
+
+function bestLT(levels){
+  for(let i=LT_LEVELS.length-1;i>=0;i--){const lv=LT_LEVELS[i];if(levels[lv])return{lv,...levels[lv]};}
+  return null;
+}
+
+/* ===== MAIN ===== */
+async function run(){
+  abtn.disabled=true;abtn.textContent='Analyzing...';
+  try{
+    for(const[k,f]of Object.entries(fm)){pd[k]=csv(await readF(f))}
+    const ivl={},ltR={},ltD={},ltLv={};
+    for(const k of Object.keys(S)){
+      if(S[k].t==='IVL'&&pd[k])ivl[k]=aIVL(pd[k]);
+      if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
+    }
+    renderIVL(ivl,ltLv);
+    renderLTD(ltLv);
+    renderLTC(ltD,ltLv);
+    renderSpec(ivl);
+    res.classList.remove('hidden');
+    $('ltdCard').classList.toggle('hidden',!Object.keys(ltLv).length);
+    $('ltcCard').classList.toggle('hidden',!Object.keys(ltD).length);
+    $('spCard').classList.toggle('hidden',!Object.keys(ivl).some(k=>ivl[k]?.spec?.length));
+    setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }catch(e){alert('Error: '+e.message);console.error(e)}
+  finally{abtn.disabled=false;updBtn()}
+}
+
+/* ===== IVL TABLE ===== */
+function renderIVL(ivl,ltLv){
+  const t=$('ivlT');
+  let h='<thead><tr><th>Block</th><th>Row</th><th>Voltage (V)</th><th>Eff (cd/A)</th><th>EQE (%)</th><th>CIE x</th><th>CIE y</th><th>Peak WL (nm)</th><th>LT</th></tr></thead><tbody>';
+  let bi=0;
+  for(const b of BLOCKS){
+    const d1=ivl[b.r1],d2=ivl[b.r2];
+    if(!d1&&!d2)continue;
+    bi++;
+    const lt1=ltLv[b.lt1],lt2=ltLv[b.lt2];
+    const bl1=lt1?bestLT(lt1):null,bl2=lt2?bestLT(lt2):null;
+
+    h+=`<tr class="bh"><td colspan="9">${ci(bi)} ${b.lb}</td></tr>`;
+    // Row 1
+    h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td><td>1st</td>`;
+    if(d1){h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`}
+    else h+='<td colspan="6" style="color:var(--tx2)">No file</td>';
+    h+=`<td>${bl1?'T'+bl1.lv+'='+Math.round(bl1.hr)+'hr':'-'}</td></tr>`;
+    // Row 2
+    h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td><td>2nd</td>`;
+    if(d2){h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`}
+    else h+='<td colspan="6" style="color:var(--tx2)">No file</td>';
+    h+=`<td>${bl2?'T'+bl2.lv+'='+Math.round(bl2.hr)+'hr':'-'}</td></tr>`;
+    // Eval
+    h+='<tr class="ev"><td>Result</td><td>2nd/1st</td>';
+    if(d1&&d2){
+      h+=eTd(d2.volt,d1.volt)+eTd(d2.eff,d1.eff)+eTd(d2.eqe,d1.eqe)+eTd(d2.cx,d1.cx)+eTd(d2.cy,d1.cy)+'<td>-</td>';
+    }else h+='<td colspan="6">-</td>';
+    // LT eval
+    if(bl1&&bl2&&bl1.lv===bl2.lv&&bl1.hr&&bl2.hr){h+=eTd(bl2.hr,bl1.hr)}else h+='<td>-</td>';
+    h+='</tr>';
+  }
+  h+='</tbody>';
+  t.innerHTML=h;
+}
+
+function nTd(v,d){return`<td>${isNaN(v)?'-':v.toFixed(d)}</td>`}
+
+function eTd(num,den){
+  if(isNaN(num)||isNaN(den)||den===0)return'<td>-</td>';
+  const pct=num/den*100;
+  const cls=Math.abs(pct-100)<=5?'blue':'red';
+  return`<td class="${cls}">${pct.toFixed(2)}%</td>`;
+}
+
+function ci(n){return String.fromCodePoint(0x245F+n)}
+
+/* ===== LT DETAIL TABLE ===== */
+function renderLTD(ltLv){
+  const t=$('ltdT');
+  const keys=Object.keys(ltLv);
+  if(!keys.length){t.innerHTML='';return}
+  let h='<thead><tr><th>File</th>';
+  for(const lv of LT_LEVELS)h+=`<th>T${lv}</th>`;
+  h+='</tr></thead><tbody>';
+  for(const k of keys){
+    const lv=ltLv[k];
+    h+=`<tr><td>${S[k]?.l||k}</td>`;
+    for(const l of LT_LEVELS){
+      if(lv[l])h+=`<td>${Math.round(lv[l].hr)}hr / ${lv[l].pct.toFixed(2)}%</td>`;
+      else h+='<td style="color:var(--tx2)">-</td>';
+    }
+    h+='</tr>';
+  }
+  h+='</tbody>';
+  t.innerHTML=h;
+}
+
+/* ===== LT CHART ===== */
+let ltState={xMax:250,yMin:88,yMax:101,xOn:true,yOn:true,dsVis:{},lvVis:{}};
+let ltRawG={},ltLvG={};
+
+function renderLTC(ltD,ltLv){
+  ltRawG=ltD;ltLvG=ltLv;
+  // Default xMax from data
+  let mx=0;
+  for(const k in ltD)if(ltD[k].h.length)mx=Math.max(mx,...ltD[k].h);
+  ltState.xMax=Math.ceil(mx/10)*10||250;
+  // Init visibility
+  for(const k in ltD)ltState.dsVis[k]=true;
+  for(const lv of LT_LEVELS)ltState.lvVis[lv]=true;
+
+  buildCtrl();
+  drawLT();
+}
+
+function buildCtrl(){
+  const el=$('ltCtrl');
+  let h='';
+  h+=`<label>X max(hr)<input type="number" id="cxm" value="${ltState.xMax}" step="10"></label>`;
+  h+=`<label>Y min(%)<input type="number" id="cyn" value="${ltState.yMin}" step="1"></label>`;
+  h+=`<label>Y max(%)<input type="number" id="cyx" value="${ltState.yMax}" step="1"></label>`;
+  h+=`<button id="txb" class="${ltState.xOn?'active':''}">X Axis</button>`;
+  h+=`<button id="tyb" class="${ltState.yOn?'active':''}">Y Axis</button>`;
+  h+=`<button id="capply">APPLY</button>`;
+  h+='<div class="sep"></div>';
+  for(const k in ltRawG){
+    const c=COL[k]||'#fff';
+    h+=`<label style="color:${c}"><input type="checkbox" data-ds="${k}" ${ltState.dsVis[k]?'checked':''}> ${S[k]?.l||k}</label>`;
+  }
+  h+='<div class="sep"></div>';
+  for(const lv of LT_LEVELS){
+    h+=`<label><input type="checkbox" data-lv="${lv}" ${ltState.lvVis[lv]?'checked':''}> T${lv}</label>`;
+  }
+  el.innerHTML=h;
+
+  $('capply').onclick=applyLT;
+  $('txb').onclick=function(){ltState.xOn=!ltState.xOn;this.classList.toggle('active');drawLT()};
+  $('tyb').onclick=function(){ltState.yOn=!ltState.yOn;this.classList.toggle('active');drawLT()};
+  el.querySelectorAll('[data-ds]').forEach(cb=>cb.onchange=function(){ltState.dsVis[this.dataset.ds]=this.checked;drawLT()});
+  el.querySelectorAll('[data-lv]').forEach(cb=>cb.onchange=function(){ltState.lvVis[parseInt(this.dataset.lv)]=this.checked;drawLT()});
+}
+
+function applyLT(){
+  ltState.xMax=parseFloat($('cxm').value)||250;
+  ltState.yMin=parseFloat($('cyn').value)||88;
+  ltState.yMax=parseFloat($('cyx').value)||101;
+  drawLT();
+}
+
+function drawLT(){
+  if(ltCI){ltCI.destroy();ltCI=null}
+  const ds=[];
+
+  // Data lines
+  for(const[k,d]of Object.entries(ltRawG)){
+    if(!ltState.dsVis[k]||!d.h.length)continue;
+    ds.push({
+      label:S[k]?.l||k,
+      data:d.h.map((h,i)=>({x:h,y:d.l[i]})),
+      borderColor:COL[k],
+      backgroundColor:COL[k]+'22',
+      borderWidth:2.5,
+      pointRadius:0,
+      pointHoverRadius:5,
+      tension:0.05,
+      fill:false,
+      order:1,
+    });
+  }
+
+  // Reference lines
+  for(const lv of LT_LEVELS){
+    if(!ltState.lvVis[lv])continue;
+    ds.push({
+      label:'T'+lv+' ('+lv+'%)',
+      data:[{x:0,y:lv},{x:ltState.xMax,y:lv}],
+      borderColor:'rgba(255,255,255,0.18)',
+      borderDash:[8,4],
+      borderWidth:1,
+      pointRadius:0,
+      fill:false,
+      order:2,
+    });
+  }
+
+  const ctx=$('ltC').getContext('2d');
+  ltCI=new Chart(ctx,{
+    type:'line',
+    data:{datasets:ds},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:300},
+      interaction:{mode:'nearest',axis:'x',intersect:false},
+      scales:{
+        x:{
+          type:'linear',
+          display:ltState.xOn,
+          min:0,max:ltState.xMax,
+          title:{display:ltState.xOn,text:'Hour Passed (hrs)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},
+          ticks:{color:'#7d8590'},
+          grid:{color:'rgba(255,255,255,0.06)'},
+        },
+        y:{
+          display:ltState.yOn,
+          min:ltState.yMin,max:ltState.yMax,
+          title:{display:ltState.yOn,text:'Relative Luminance (%)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},
+          ticks:{color:'#7d8590',stepSize:1},
+          grid:{color:'rgba(255,255,255,0.06)'},
+        },
+      },
+      plugins:{
+        legend:{position:'top',labels:{color:'#e6edf3',usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:11}}},
+        tooltip:{
+          backgroundColor:'#21262d',
+          titleColor:'#e6edf3',
+          bodyColor:'#e6edf3',
+          borderColor:'#30363d',
+          borderWidth:1,
+          callbacks:{
+            label:c=>{
+              if(c.dataset.borderDash)return c.dataset.label;
+              return c.dataset.label+': '+c.parsed.y.toFixed(2)+'% @ '+c.parsed.x.toFixed(1)+'hr';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ===== SPECTRUM ===== */
+function renderSpec(ivl){
+  if(spCI){spCI.destroy();spCI=null}
+  const ds=[];
+  for(const[k,d]of Object.entries(ivl)){
+    if(!d?.spec?.length)continue;
+    ds.push({
+      label:S[k]?.l+' (@J='+(d.absJ?.toFixed(1)||'10')+')',
+      data:d.spec,
+      borderColor:COL[k],
+      backgroundColor:COL[k]+'18',
+      borderWidth:1.8,
+      pointRadius:0,
+      tension:0.2,
+      fill:true,
+    });
+  }
+  if(!ds.length)return;
+  const ctx=$('spC').getContext('2d');
+  spCI=new Chart(ctx,{
+    type:'line',data:{datasets:ds},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',axis:'x',intersect:false},
+      scales:{
+        x:{type:'linear',min:380,max:780,title:{display:true,text:'Wavelength (nm)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},ticks:{color:'#7d8590'},grid:{color:'rgba(255,255,255,0.06)'}},
+        y:{beginAtZero:true,title:{display:true,text:'Intensity (a.u.)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},ticks:{color:'#7d8590'},grid:{color:'rgba(255,255,255,0.06)'}},
+      },
+      plugins:{
+        legend:{position:'top',labels:{color:'#e6edf3',usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:11}}},
+        tooltip:{backgroundColor:'#21262d',titleColor:'#e6edf3',bodyColor:'#e6edf3',borderColor:'#30363d',borderWidth:1,
+          callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toExponential(4)+' @ '+c.parsed.x+'nm'}}
+      }
+    }
+  });
+}
+
+/* ===== COPY ===== */
+window.copyTbl=function(id){
+  const tbl=$(id);
+  const rows=tbl.querySelectorAll('tr');
+  let txt='';
+  rows.forEach(r=>{
+    const cells=r.querySelectorAll('th,td');
+    txt+=Array.from(cells).map(c=>c.textContent.trim()).join('\t')+'\n';
+  });
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=tbl.closest('.card').querySelector('.cpb');
+    if(btn){btn.textContent='Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('done')},1500)}
+  });
+};
+
+init();
+})();
+</script>
+</body>
+</html>
