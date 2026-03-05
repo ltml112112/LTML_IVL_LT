@@ -127,6 +127,14 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <!-- IVL -->
     <div class="card">
         <h2>IVL ANALYSIS</h2>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:.5rem">
+          <span style="color:var(--tx2);font-size:.75rem;font-weight:700">소수점:</span>
+          <div class="ct-grp" id="decGrp">
+            <button class="ct-btn" data-dec="2" id="dec2">소수 2째</button>
+            <button class="ct-btn" data-dec="1" id="dec1">소수 1째</button>
+            <button class="ct-btn" data-dec="0" id="dec0">정수</button>
+          </div>
+        </div>
         <button class="cpb" onclick="copyTbl('ivlT')">COPY</button>
         <div class="tw"><table class="t" id="ivlT"></table></div>
     </div>
@@ -193,6 +201,8 @@ const LT_LEVELS=[95,94,93,92,91,90];
 const fm={}, pd={};
 let ltCI=null, spCI=null;
 const unm=[];
+let ivlDec=2; // IVL table decimal mode: 0=정수, 1=소수1째, 2=소수2째(default)
+let ivlCache={ivl:null,ltLv:null}; // cache for re-render
 
 const $=id=>document.getElementById(id);
 const dz=$('dz'),fi=$('fi'),fg=$('fg'),abtn=$('abtn'),res=$('res');
@@ -225,8 +235,8 @@ function detect(name){
   const n=name.toLowerCase();
   let g='';
   if(/^re[fv][_\s]/i.test(n))g='REF';
-  else if(/^sample[_\s]/i.test(n))g='SAMPLE';
-  else if(n.includes('sample'))g='SAMPLE';
+  else if(/^sam(?:ple)?[_\s]/i.test(n))g='SAMPLE';
+  else if(n.includes('sample')||n.includes('sam_'))g='SAMPLE';
   else if(n.includes('ref')||n.includes('rev'))g='REF';
   else return null;
   let t='',num='';
@@ -344,8 +354,10 @@ async function run(){
       if(S[k].t==='IVL'&&pd[k])ivl[k]=aIVL(pd[k]);
       if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
     }
+    ivlCache={ivl,ltLv};
     renderTbl('ivlT',BLOCKS_MAIN,ivl,ltLv);
     const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,ivl,ltLv);
+    initDecBtns();
     $('ivlExCard').classList.toggle('hidden',!exHas);
     renderLTC(ltD,ltLv);
     renderSpec(ivl);
@@ -398,7 +410,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
         const pct=v2/v1*100;
         const cls=Math.abs(pct-100)<=5?'blue':'red';
         const warn=(v1<100||v2<100)?'<br><span style="font-size:.65rem;color:#d29922">(100h 미만)</span>':'';
-        h+=`<td class="${cls}">${pct.toFixed(2)}%${warn}</td>`;
+        h+=`<td class="${cls}">${pct.toFixed(ivlDec)}%${warn}</td>`;
       }else h+='<td>-</td>';
     }
     h+='</tr>';
@@ -408,13 +420,19 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   return bi>0;
 }
 
-function nTd(v,d){return`<td>${isNaN(v)?'-':v.toFixed(d)}</td>`}
+function decD(base){
+  // Adjust decimal places based on ivlDec mode
+  // ivlDec=2 → original, ivlDec=1 → base-1 (min 0), ivlDec=0 → max(base-2,0)
+  return Math.max(0, base - (2 - ivlDec));
+}
+
+function nTd(v,d){return`<td>${isNaN(v)?'-':v.toFixed(decD(d))}</td>`}
 
 function eTd(num,den){
   if(isNaN(num)||isNaN(den)||den===0)return'<td>-</td>';
   const pct=num/den*100;
   const cls=Math.abs(pct-100)<=5?'blue':'red';
-  return`<td class="${cls}">${pct.toFixed(2)}%</td>`;
+  return`<td class="${cls}">${pct.toFixed(ivlDec)}%</td>`;
 }
 
 function ci(n){return String.fromCodePoint(0x245F+n)}
@@ -654,6 +672,22 @@ window.copyTbl=function(id){
     if(btn){btn.textContent='Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('done')},1500)}
   });
 };
+
+function initDecBtns(){
+  const btns=document.querySelectorAll('#decGrp .ct-btn');
+  btns.forEach(b=>{
+    b.classList.toggle('active', parseInt(b.dataset.dec)===ivlDec);
+    b.onclick=function(){
+      ivlDec=parseInt(this.dataset.dec);
+      btns.forEach(x=>x.classList.toggle('active', parseInt(x.dataset.dec)===ivlDec));
+      if(ivlCache.ivl){
+        renderTbl('ivlT',BLOCKS_MAIN,ivlCache.ivl,ivlCache.ltLv);
+        const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,ivlCache.ivl,ivlCache.ltLv);
+        $('ivlExCard').classList.toggle('hidden',!exHas);
+      }
+    };
+  });
+}
 
 init();
 })();
