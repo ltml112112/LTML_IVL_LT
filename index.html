@@ -138,7 +138,7 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.65rem}
     <div class="card" id="ltcCard">
         <h2>LT CHART</h2>
         <div id="ltCtrl"></div>
-        <div class="ch-wrap"><canvas id="ltC"></canvas></div>
+        <div class="ch-wrap wh sq"><canvas id="ltC"></canvas></div>
     </div>
 
     <!-- Spectrum -->
@@ -416,7 +416,7 @@ function eTd(num,den){
 function ci(n){return String.fromCodePoint(0x245F+n)}
 
 /* ===== LT CHART ===== */
-let ltState={xMax:250,yMin:90,yMax:101,xOn:true,yOn:true,xTicks:true,yTicks:true,white:false,square:false,dsVis:{},dsNames:{}};
+let ltState={xMax:150,yMin:95,yMax:101,xOn:true,yOn:true,xTicks:true,yTicks:true,white:true,square:true,dsVis:{},dsNames:{}};
 let ltRawG={},ltLvG={},ltDataMaxHr=500;
 
 function renderLTC(ltD,ltLv){
@@ -424,7 +424,6 @@ function renderLTC(ltD,ltLv){
   // Default xMax from data
   let mx=0;
   for(const k in ltD)if(ltD[k].h.length)mx=Math.max(mx,...ltD[k].h);
-  ltState.xMax=Math.ceil(mx/10)*10||250;
   ltDataMaxHr=Math.max(Math.ceil(mx/10)*10*2,500);
   // Init visibility
   for(const k in ltD)ltState.dsVis[k]=true;
