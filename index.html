@@ -496,13 +496,10 @@ function maSmooth(arr,w){
   return r;
 }
 
-function drawLT(){
-  if(ltCI){ltCI.destroy();ltCI=null}
+function ltBuildDS(){
   const w=ltState.white;
-  const tc=w?'#333':'#7d8590', gc=w?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.06)', lc=w?'#222':'#e6edf3';
   const rlc=w?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)';
   const ds=[];
-
   const sm=ltState.smooth;
   for(const[k,d]of Object.entries(ltRawG)){
     if(!ltState.dsVis[k]||!d.h.length)continue;
@@ -520,7 +517,6 @@ function drawLT(){
       order:1,
     });
   }
-
   for(const lv of LT_LEVELS){
     ds.push({
       label:'T'+lv+' ('+lv+'%)',
@@ -533,55 +529,66 @@ function drawLT(){
       order:2,
     });
   }
+  return ds;
+}
 
-  const ctx=$('ltC').getContext('2d');
-  ltCI=new Chart(ctx,{
-    type:'line',
-    data:{datasets:ds},
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:{duration:300},
-      interaction:{mode:'nearest',axis:'x',intersect:false},
-      scales:{
-        x:{
-          type:'linear',
-          display:ltState.xOn,
-          min:0,max:ltState.xMax,
-          title:{display:ltState.xOn,text:'Time (hours)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
-          ticks:{display:ltState.xTicks,color:tc,font:{family:'Consolas',size:12}},
-          grid:{color:gc},
-          border:{color:w?'#999':'#30363d'},
-        },
-        y:{
-          display:ltState.yOn,
-          min:ltState.yMin,max:ltState.yMax,
-          title:{display:ltState.yOn,text:'Luminance (%)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
-          ticks:{display:ltState.yTicks,color:tc,font:{family:'Consolas',size:12},stepSize:1},
-          grid:{color:gc},
-          border:{color:w?'#999':'#30363d'},
-        },
+function ltBuildOpts(){
+  const w=ltState.white;
+  const tc=w?'#333':'#7d8590', gc=w?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.06)', lc=w?'#222':'#e6edf3';
+  return{
+    responsive:true,
+    maintainAspectRatio:false,
+    animation:false,
+    interaction:{mode:'nearest',axis:'x',intersect:false},
+    scales:{
+      x:{
+        type:'linear',
+        display:ltState.xOn,
+        min:0,max:ltState.xMax,
+        title:{display:ltState.xOn,text:'Time (hours)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
+        ticks:{display:ltState.xTicks,color:tc,font:{family:'Consolas',size:12}},
+        grid:{color:gc},
+        border:{color:w?'#999':'#30363d'},
       },
-      plugins:{
-        legend:{position:'top',labels:{color:lc,usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:13},padding:16,filter:item=>!item.text.startsWith('T')}},
-        tooltip:{
-          titleFont:{family:'Consolas',size:13},
-          bodyFont:{family:'Consolas',size:12},
-          backgroundColor:w?'#fff':'#21262d',
-          titleColor:w?'#222':'#e6edf3',
-          bodyColor:w?'#222':'#e6edf3',
-          borderColor:w?'#ccc':'#30363d',
-          borderWidth:1,
-          callbacks:{
-            label:c=>{
-              if(c.dataset.borderDash)return c.dataset.label;
-              return c.dataset.label+': '+c.parsed.y.toFixed(2)+'% @ '+c.parsed.x.toFixed(1)+'hr';
-            }
+      y:{
+        display:ltState.yOn,
+        min:ltState.yMin,max:ltState.yMax,
+        title:{display:ltState.yOn,text:'Luminance (%)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
+        ticks:{display:ltState.yTicks,color:tc,font:{family:'Consolas',size:12},stepSize:1},
+        grid:{color:gc},
+        border:{color:w?'#999':'#30363d'},
+      },
+    },
+    plugins:{
+      legend:{position:'top',labels:{color:lc,usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:13},padding:16,filter:item=>!item.text.startsWith('T')}},
+      tooltip:{
+        titleFont:{family:'Consolas',size:13},
+        bodyFont:{family:'Consolas',size:12},
+        backgroundColor:w?'#fff':'#21262d',
+        titleColor:w?'#222':'#e6edf3',
+        bodyColor:w?'#222':'#e6edf3',
+        borderColor:w?'#ccc':'#30363d',
+        borderWidth:1,
+        callbacks:{
+          label:c=>{
+            if(c.dataset.borderDash)return c.dataset.label;
+            return c.dataset.label+': '+c.parsed.y.toFixed(2)+'% @ '+c.parsed.x.toFixed(1)+'hr';
           }
         }
       }
     }
-  });
+  };
+}
+
+function drawLT(){
+  const ds=ltBuildDS(), opts=ltBuildOpts();
+  if(ltCI){
+    ltCI.data.datasets=ds;
+    ltCI.options=opts;
+    ltCI.update('none');
+  }else{
+    ltCI=new Chart($('ltC').getContext('2d'),{type:'line',data:{datasets:ds},options:opts});
+  }
 }
 
 function copyChart(){
