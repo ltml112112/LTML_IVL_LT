@@ -67,15 +67,24 @@ header p{color:var(--tx2);font-size:.8rem}
 .ch-wrap{position:relative;height:450px;background:#0d1117;border:1px solid var(--bdr);border-radius:4px;padding:4px;transition:background .2s}
 .ch-wrap.wh{background:#ffffff;border-color:#ccc}
 
-/* Controls */
-.ctrl{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem;font-size:.75rem}
-.ctrl label{display:flex;align-items:center;gap:3px;color:var(--tx2)}
-.ctrl input[type=number]{width:60px;background:var(--input);border:1px solid var(--bdr);color:var(--tx);padding:2px 4px;border-radius:3px;font-family:inherit;font-size:.75rem;text-align:center}
-.ctrl input[type=checkbox]{accent-color:var(--acc)}
-.ctrl button{background:var(--bdr);border:1px solid #484f58;color:var(--tx);padding:2px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.75rem}
-.ctrl button:hover{background:var(--acc);color:#000}
-.ctrl button.active{background:var(--acc);color:#000}
-.ctrl .sep{width:1px;height:16px;background:var(--bdr);margin:0 4px}
+/* Chart Controls */
+.ct-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.5rem}
+.ct-sl{display:flex;align-items:center;gap:6px;flex:1;min-width:240px;padding:5px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--bdr);border-radius:5px}
+.ct-sl .sl{color:var(--tx2);font-size:.78rem;font-weight:600;min-width:52px}
+.ct-sl input[type=range]{flex:1;accent-color:var(--acc);cursor:pointer}
+.ct-sl .rv{color:var(--acc);font-weight:700;min-width:44px;text-align:right;font-size:.88rem}
+.ct-grp{display:inline-flex;align-items:center;gap:3px;padding:4px 8px;background:rgba(255,255,255,0.03);border:1px solid var(--bdr);border-radius:5px}
+.ct-gl{color:var(--tx2);font-size:.68rem;font-weight:700;margin-right:5px;letter-spacing:.5px}
+.ct-btn{background:var(--bdr);border:1px solid #484f58;color:var(--tx);padding:4px 10px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.78rem;transition:.15s}
+.ct-btn:hover{background:var(--acc);color:#000}
+.ct-btn.active{background:var(--acc);color:#000}
+.ct-btn.copy{background:#238636;border-color:#2ea043;color:#fff;font-weight:700;padding:4px 16px}
+.ct-btn.copy:hover{background:#2ea043}
+.ct-data{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.ct-data label{display:inline-flex;align-items:center;gap:3px;font-size:.8rem;cursor:pointer}
+.ct-data input[type=checkbox]{accent-color:var(--acc)}
+.ct-ni{background:var(--input);border:1px solid var(--bdr);color:inherit;padding:2px 5px;border-radius:3px;font-family:inherit;font-size:.78rem;width:120px}
+.ch-wrap.sq{max-width:600px;height:600px;margin-left:auto;margin-right:auto}
 
 .hidden{display:none}
 .results{animation:fi .3s ease}
@@ -118,10 +127,17 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.65rem}
         <div class="tw"><table class="t" id="ivlT"></table></div>
     </div>
 
+    <!-- IVL Extra -->
+    <div class="card hidden" id="ivlExCard">
+        <h2>IVL ANALYSIS (추가)</h2>
+        <button class="cpb" onclick="copyTbl('ivlT2')">COPY</button>
+        <div class="tw"><table class="t" id="ivlT2"></table></div>
+    </div>
+
     <!-- LT Chart -->
     <div class="card" id="ltcCard">
         <h2>LT CHART</h2>
-        <div class="ctrl" id="ltCtrl"></div>
+        <div id="ltCtrl"></div>
         <div class="ch-wrap"><canvas id="ltC"></canvas></div>
     </div>
 
@@ -151,13 +167,17 @@ const S={
   SAMPLE_LT2:{l:'SAMPLE LT-2',t:'LT',g:'SAMPLE',n:'2'},
 };
 
-const BLOCKS=[
+const BLOCKS_MAIN=[
   {lb:'REF1 vs SAMPLE1',r1:'REF_IVL1',r2:'SAMPLE_IVL1',lt1:'REF_LT1',lt2:'SAMPLE_LT1'},
   {lb:'REF1 vs SAMPLE2',r1:'REF_IVL1',r2:'SAMPLE_IVL2',lt1:'REF_LT1',lt2:'SAMPLE_LT2'},
   {lb:'REF2 vs SAMPLE1',r1:'REF_IVL2',r2:'SAMPLE_IVL1',lt1:'REF_LT2',lt2:'SAMPLE_LT1'},
   {lb:'REF2 vs SAMPLE2',r1:'REF_IVL2',r2:'SAMPLE_IVL2',lt1:'REF_LT2',lt2:'SAMPLE_LT2'},
+];
+const BLOCKS_EXTRA=[
   {lb:'SAMPLE1 vs SAMPLE2',r1:'SAMPLE_IVL1',r2:'SAMPLE_IVL2',lt1:'SAMPLE_LT1',lt2:'SAMPLE_LT2'},
+  {lb:'SAMPLE2 vs SAMPLE1',r1:'SAMPLE_IVL2',r2:'SAMPLE_IVL1',lt1:'SAMPLE_LT2',lt2:'SAMPLE_LT1'},
   {lb:'REF1 vs REF2',r1:'REF_IVL1',r2:'REF_IVL2',lt1:'REF_LT1',lt2:'REF_LT2'},
+  {lb:'REF2 vs REF1',r1:'REF_IVL2',r2:'REF_IVL1',lt1:'REF_LT2',lt2:'REF_LT1'},
 ];
 
 const COL={REF_LT1:'#4a9eff',REF_LT2:'#a855f7',SAMPLE_LT1:'#ef4444',SAMPLE_LT2:'#f59e0b',
@@ -288,12 +308,19 @@ function pLT(rows){
 function ltAll(hours,lum){
   const r={};
   for(const lv of LT_LEVELS){
-    let di=-1,rec=false;
-    for(let i=0;i<lum.length;i++){
-      if(lum[i]<lv&&di===-1)di=i;
-      if(di!==-1&&i>di&&lum[i]>=lv){rec=true;break}
+    // Find last index where lum >= lv (scan backward)
+    let lastAbove=-1;
+    for(let i=lum.length-1;i>=0;i--){if(lum[i]>=lv){lastAbove=i;break}}
+    if(lastAbove===-1){
+      // All data below level → first point
+      r[lv]={hr:hours[0],pct:lum[0]};
+    }else if(lastAbove===lum.length-1){
+      // Still above at end → no permanent drop
+      r[lv]=null;
+    }else{
+      // First point of final permanent drop
+      r[lv]={hr:hours[lastAbove+1],pct:lum[lastAbove+1]};
     }
-    r[lv]=di!==-1&&!rec?{hr:hours[di],pct:lum[di]}:null;
   }
   return r;
 }
@@ -313,7 +340,9 @@ async function run(){
       if(S[k].t==='IVL'&&pd[k])ivl[k]=aIVL(pd[k]);
       if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
     }
-    renderIVL(ivl,ltLv);
+    renderTbl('ivlT',BLOCKS_MAIN,ivl,ltLv);
+    const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,ivl,ltLv);
+    $('ivlExCard').classList.toggle('hidden',!exHas);
     renderLTC(ltD,ltLv);
     renderSpec(ivl);
     res.classList.remove('hidden');
@@ -325,14 +354,14 @@ async function run(){
 }
 
 /* ===== IVL TABLE ===== */
-function renderIVL(ivl,ltLv){
-  const t=$('ivlT');
+function renderTbl(tblId,blocks,ivl,ltLv){
+  const t=$(tblId);
   const nc=7+LT_LEVELS.length;
   let h='<thead><tr><th>Block</th><th>Op.V(V)</th><th>EL EFF(cd/A)</th><th>EQE(%)</th><th>CIE(x)</th><th>CIE(y)</th><th>MAX 파장</th>';
   for(const lv of LT_LEVELS)h+=`<th>LT(${lv})</th>`;
   h+='</tr></thead><tbody>';
   let bi=0;
-  for(const b of BLOCKS){
+  for(const b of blocks){
     const d1=ivl[b.r1],d2=ivl[b.r2];
     if(!d1&&!d2)continue;
     bi++;
@@ -354,23 +383,25 @@ function renderIVL(ivl,ltLv){
     // Eval
     h+='<tr class="ev"><td>Result</td>';
     if(d1&&d2){
-      // Op.V: 1st/2nd (REF/SAMPLE)
       h+=eTd(d1.volt,d2.volt);
-      // EL EFF, EQE, CIE: 2nd/1st (SAMPLE/REF)
       h+=eTd(d2.eff,d1.eff)+eTd(d2.eqe,d1.eqe)+eTd(d2.cx,d1.cx)+eTd(d2.cy,d1.cy);
-      // MAX 파장: difference
       const w1=parseInt(d1.mwl)||0,w2=parseInt(d2.mwl)||0;
       h+=`<td>${w1&&w2?(w2-w1):'-'}</td>`;
     }else h+=`<td colspan="6">-</td>`;
-    // LT evals: 2nd/1st
     for(const l of LT_LEVELS){
       const v1=lv1&&lv1[l]?lv1[l].hr:null,v2=lv2&&lv2[l]?lv2[l].hr:null;
-      if(v1&&v2)h+=eTd(v2,v1);else h+='<td>-</td>';
+      if(v1!=null&&v2!=null){
+        const pct=v2/v1*100;
+        const cls=Math.abs(pct-100)<=5?'blue':'red';
+        const warn=(v1<100||v2<100)?'<br><span style="font-size:.65rem;color:#d29922">(100h 미만)</span>':'';
+        h+=`<td class="${cls}">${pct.toFixed(2)}%${warn}</td>`;
+      }else h+='<td>-</td>';
     }
     h+='</tr>';
   }
   h+='</tbody>';
   t.innerHTML=h;
+  return bi>0;
 }
 
 function nTd(v,d){return`<td>${isNaN(v)?'-':v.toFixed(d)}</td>`}
@@ -385,8 +416,8 @@ function eTd(num,den){
 function ci(n){return String.fromCodePoint(0x245F+n)}
 
 /* ===== LT CHART ===== */
-let ltState={xMax:250,yMin:88,yMax:101,xOn:true,yOn:true,xTicks:true,yTicks:true,white:false,dsVis:{},lvVis:{}};
-let ltRawG={},ltLvG={};
+let ltState={xMax:250,yMin:90,yMax:101,xOn:true,yOn:true,xTicks:true,yTicks:true,white:false,square:false,dsVis:{},dsNames:{}};
+let ltRawG={},ltLvG={},ltDataMaxHr=500;
 
 function renderLTC(ltD,ltLv){
   ltRawG=ltD;ltLvG=ltLv;
@@ -394,9 +425,9 @@ function renderLTC(ltD,ltLv){
   let mx=0;
   for(const k in ltD)if(ltD[k].h.length)mx=Math.max(mx,...ltD[k].h);
   ltState.xMax=Math.ceil(mx/10)*10||250;
+  ltDataMaxHr=Math.max(Math.ceil(mx/10)*10*2,500);
   // Init visibility
   for(const k in ltD)ltState.dsVis[k]=true;
-  for(const lv of LT_LEVELS)ltState.lvVis[lv]=true;
 
   buildCtrl();
   drawLT();
@@ -405,43 +436,48 @@ function renderLTC(ltD,ltLv){
 function buildCtrl(){
   const el=$('ltCtrl');
   let h='';
-  h+=`<label>X max(hr)<input type="number" id="cxm" value="${ltState.xMax}" step="10"></label>`;
-  h+=`<label>Y min(%)<input type="number" id="cyn" value="${ltState.yMin}" step="1"></label>`;
-  h+=`<label>Y max(%)<input type="number" id="cyx" value="${ltState.yMax}" step="1"></label>`;
-  h+=`<button id="txb" class="${ltState.xOn?'active':''}">X Axis</button>`;
-  h+=`<button id="tyb" class="${ltState.yOn?'active':''}">Y Axis</button>`;
-  h+=`<button id="txn">X Ticks</button>`;
-  h+=`<button id="tyn">Y Ticks</button>`;
-  h+=`<button id="twb" class="${ltState.white?'active':''}">WHITE</button>`;
-  h+=`<button id="ccpy">COPY CHART</button>`;
-  h+=`<button id="capply">APPLY</button>`;
-  h+='<div class="sep"></div>';
+
+  // Row 1: Sliders
+  h+='<div class="ct-row">';
+  h+=`<div class="ct-sl"><span class="sl">X max</span><input type="range" id="cxm" min="10" max="${ltDataMaxHr}" step="10" value="${ltState.xMax}"><span class="rv" id="cxmv">${ltState.xMax}</span><span class="sl" style="min-width:auto">hr</span></div>`;
+  h+=`<div class="ct-sl"><span class="sl">Y min</span><input type="range" id="cyn" min="90" max="100" step="0.5" value="${ltState.yMin}"><span class="rv" id="cynv">${ltState.yMin}</span><span class="sl" style="min-width:auto">%</span></div>`;
+  h+=`<div class="ct-sl"><span class="sl">Y max</span><input type="range" id="cyx" min="98" max="101" step="0.5" value="${ltState.yMax}"><span class="rv" id="cyxv">${ltState.yMax}</span><span class="sl" style="min-width:auto">%</span></div>`;
+  h+='</div>';
+
+  // Row 2: Button groups
+  h+='<div class="ct-row">';
+  h+=`<div class="ct-grp"><span class="ct-gl">MODE</span><button class="ct-btn${ltState.white?' active':''}" id="twb">WHITE</button><button class="ct-btn${ltState.square?' active':''}" id="tsq">SQUARE</button></div>`;
+  h+=`<div class="ct-grp"><span class="ct-gl">AXIS</span><button class="ct-btn${ltState.xOn?' active':''}" id="txb">X Label</button><button class="ct-btn${ltState.yOn?' active':''}" id="tyb">Y Label</button><button class="ct-btn${ltState.xTicks?' active':''}" id="txn">X Ticks</button><button class="ct-btn${ltState.yTicks?' active':''}" id="tyn">Y Ticks</button></div>`;
+  h+=`<button class="ct-btn copy" id="ccpy">COPY CHART</button>`;
+  h+='</div>';
+
+  // Row 3: Dataset checkboxes + editable names
+  h+='<div class="ct-row ct-data">';
+  h+='<span class="ct-gl">DATA</span>';
   for(const k in ltRawG){
     const c=COL[k]||'#fff';
-    h+=`<label style="color:${c}"><input type="checkbox" data-ds="${k}" ${ltState.dsVis[k]?'checked':''}> ${S[k]?.l||k}</label>`;
+    const nm=ltState.dsNames[k]||S[k]?.l||k;
+    h+=`<label style="color:${c}"><input type="checkbox" data-ds="${k}" ${ltState.dsVis[k]?'checked':''}> <input type="text" class="ct-ni" data-dn="${k}" value="${nm}" style="color:${c};border-color:${c}44"></label>`;
   }
-  h+='<div class="sep"></div>';
-  for(const lv of LT_LEVELS){
-    h+=`<label><input type="checkbox" data-lv="${lv}" ${ltState.lvVis[lv]?'checked':''}> T${lv}</label>`;
-  }
+  h+='</div>';
+
   el.innerHTML=h;
 
-  $('capply').onclick=applyLT;
+  // Slider real-time handlers
+  $('cxm').oninput=function(){$('cxmv').textContent=this.value;ltState.xMax=parseFloat(this.value);drawLT()};
+  $('cyn').oninput=function(){$('cynv').textContent=this.value;ltState.yMin=parseFloat(this.value);drawLT()};
+  $('cyx').oninput=function(){$('cyxv').textContent=this.value;ltState.yMax=parseFloat(this.value);drawLT()};
+
+  // Button handlers
+  $('twb').onclick=function(){ltState.white=!ltState.white;this.classList.toggle('active');$('ltC').closest('.ch-wrap').classList.toggle('wh',ltState.white);drawLT()};
+  $('tsq').onclick=function(){ltState.square=!ltState.square;this.classList.toggle('active');$('ltC').closest('.ch-wrap').classList.toggle('sq',ltState.square);drawLT()};
   $('txb').onclick=function(){ltState.xOn=!ltState.xOn;this.classList.toggle('active');drawLT()};
   $('tyb').onclick=function(){ltState.yOn=!ltState.yOn;this.classList.toggle('active');drawLT()};
   $('txn').onclick=function(){ltState.xTicks=!ltState.xTicks;this.classList.toggle('active');drawLT()};
   $('tyn').onclick=function(){ltState.yTicks=!ltState.yTicks;this.classList.toggle('active');drawLT()};
-  $('twb').onclick=function(){ltState.white=!ltState.white;this.classList.toggle('active');$('ltC').closest('.ch-wrap').classList.toggle('wh',ltState.white);drawLT()};
   $('ccpy').onclick=copyChart;
   el.querySelectorAll('[data-ds]').forEach(cb=>cb.onchange=function(){ltState.dsVis[this.dataset.ds]=this.checked;drawLT()});
-  el.querySelectorAll('[data-lv]').forEach(cb=>cb.onchange=function(){ltState.lvVis[parseInt(this.dataset.lv)]=this.checked;drawLT()});
-}
-
-function applyLT(){
-  ltState.xMax=parseFloat($('cxm').value)||250;
-  ltState.yMin=parseFloat($('cyn').value)||88;
-  ltState.yMax=parseFloat($('cyx').value)||101;
-  drawLT();
+  el.querySelectorAll('[data-dn]').forEach(inp=>{inp.onchange=function(){ltState.dsNames[this.dataset.dn]=this.value;drawLT()};inp.onclick=function(e){e.stopPropagation()}});
 }
 
 function drawLT(){
@@ -454,7 +490,7 @@ function drawLT(){
   for(const[k,d]of Object.entries(ltRawG)){
     if(!ltState.dsVis[k]||!d.h.length)continue;
     ds.push({
-      label:S[k]?.l||k,
+      label:ltState.dsNames[k]||S[k]?.l||k,
       data:d.h.map((h,i)=>({x:h,y:d.l[i]})),
       borderColor:COL[k],
       backgroundColor:COL[k]+'22',
@@ -468,7 +504,6 @@ function drawLT(){
   }
 
   for(const lv of LT_LEVELS){
-    if(!ltState.lvVis[lv])continue;
     ds.push({
       label:'T'+lv+' ('+lv+'%)',
       data:[{x:0,y:lv},{x:ltState.xMax,y:lv}],
@@ -495,23 +530,25 @@ function drawLT(){
           type:'linear',
           display:ltState.xOn,
           min:0,max:ltState.xMax,
-          title:{display:ltState.xOn,text:'Time (hours)',color:tc,font:{family:'Consolas',weight:'bold'}},
-          ticks:{display:ltState.xTicks,color:tc},
+          title:{display:ltState.xOn,text:'Time (hours)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
+          ticks:{display:ltState.xTicks,color:tc,font:{family:'Consolas',size:12}},
           grid:{color:gc},
           border:{color:w?'#999':'#30363d'},
         },
         y:{
           display:ltState.yOn,
           min:ltState.yMin,max:ltState.yMax,
-          title:{display:ltState.yOn,text:'Luminance (%)',color:tc,font:{family:'Consolas',weight:'bold'}},
-          ticks:{display:ltState.yTicks,color:tc,stepSize:1},
+          title:{display:ltState.yOn,text:'Luminance (%)',color:tc,font:{family:'Consolas',size:14,weight:'bold'}},
+          ticks:{display:ltState.yTicks,color:tc,font:{family:'Consolas',size:12},stepSize:1},
           grid:{color:gc},
           border:{color:w?'#999':'#30363d'},
         },
       },
       plugins:{
-        legend:{position:'top',labels:{color:lc,usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:11}}},
+        legend:{position:'top',labels:{color:lc,usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:13},padding:16,filter:item=>!item.text.startsWith('T')}},
         tooltip:{
+          titleFont:{family:'Consolas',size:13},
+          bodyFont:{family:'Consolas',size:12},
           backgroundColor:w?'#fff':'#21262d',
           titleColor:w?'#222':'#e6edf3',
           bodyColor:w?'#222':'#e6edf3',
@@ -533,7 +570,7 @@ function copyChart(){
   const cv=$('ltC');
   cv.toBlob(blob=>{
     navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(()=>{
-      const b=$('ccpy');if(b){b.textContent='Copied!';setTimeout(()=>b.textContent='COPY CHART',1500)}
+      const b=$('ccpy');if(b){b.textContent='Copied!';b.style.background='#1f6feb';setTimeout(()=>{b.textContent='COPY CHART';b.style.background=''},1500)}
     }).catch(()=>{
       const url=cv.toDataURL('image/png');
       const a=document.createElement('a');a.href=url;a.download='LT_Chart.png';a.click();
