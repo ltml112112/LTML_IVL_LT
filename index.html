@@ -64,7 +64,8 @@ header p{color:var(--tx2);font-size:.8rem}
 .cpb.done{background:#238636;color:#fff}
 
 /* Chart */
-.ch-wrap{position:relative;height:450px;background:#0d1117;border:1px solid var(--bdr);border-radius:4px;padding:4px}
+.ch-wrap{position:relative;height:450px;background:#0d1117;border:1px solid var(--bdr);border-radius:4px;padding:4px;transition:background .2s}
+.ch-wrap.wh{background:#ffffff;border-color:#ccc}
 
 /* Controls */
 .ctrl{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem;font-size:.75rem}
@@ -115,13 +116,6 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.65rem}
         <h2>IVL ANALYSIS</h2>
         <button class="cpb" onclick="copyTbl('ivlT')">COPY</button>
         <div class="tw"><table class="t" id="ivlT"></table></div>
-    </div>
-
-    <!-- LT Detail -->
-    <div class="card" id="ltdCard">
-        <h2>LT LIFETIME (T95 ~ T90)</h2>
-        <button class="cpb" onclick="copyTbl('ltdT')">COPY</button>
-        <div class="tw"><table class="t" id="ltdT"></table></div>
     </div>
 
     <!-- LT Chart -->
@@ -320,11 +314,9 @@ async function run(){
       if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
     }
     renderIVL(ivl,ltLv);
-    renderLTD(ltLv);
     renderLTC(ltD,ltLv);
     renderSpec(ivl);
     res.classList.remove('hidden');
-    $('ltdCard').classList.toggle('hidden',!Object.keys(ltLv).length);
     $('ltcCard').classList.toggle('hidden',!Object.keys(ltD).length);
     $('spCard').classList.toggle('hidden',!Object.keys(ivl).some(k=>ivl[k]?.spec?.length));
     setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),80);
@@ -335,8 +327,8 @@ async function run(){
 /* ===== IVL TABLE ===== */
 function renderIVL(ivl,ltLv){
   const t=$('ivlT');
-  const nc=8+LT_LEVELS.length;
-  let h='<thead><tr><th>Block</th><th>Row</th><th>Op.V(V)</th><th>EL EFF(cd/A)</th><th>EQE(%)</th><th>CIE(x)</th><th>CIE(y)</th><th>MAX 파장</th>';
+  const nc=7+LT_LEVELS.length;
+  let h='<thead><tr><th>Block</th><th>Op.V(V)</th><th>EL EFF(cd/A)</th><th>EQE(%)</th><th>CIE(x)</th><th>CIE(y)</th><th>MAX 파장</th>';
   for(const lv of LT_LEVELS)h+=`<th>LT(${lv})</th>`;
   h+='</tr></thead><tbody>';
   let bi=0;
@@ -348,19 +340,19 @@ function renderIVL(ivl,ltLv){
 
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
     // Row 1
-    h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td><td>1st</td>`;
+    h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
     if(d1)h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
     for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?Math.round(lv1[l].hr):'-'}</td>`;
     h+='</tr>';
     // Row 2
-    h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td><td>2nd</td>`;
+    h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
     if(d2)h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
     for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?Math.round(lv2[l].hr):'-'}</td>`;
     h+='</tr>';
     // Eval
-    h+='<tr class="ev"><td>Result</td><td></td>';
+    h+='<tr class="ev"><td>Result</td>';
     if(d1&&d2){
       // Op.V: 1st/2nd (REF/SAMPLE)
       h+=eTd(d1.volt,d2.volt);
@@ -392,29 +384,8 @@ function eTd(num,den){
 
 function ci(n){return String.fromCodePoint(0x245F+n)}
 
-/* ===== LT DETAIL TABLE ===== */
-function renderLTD(ltLv){
-  const t=$('ltdT');
-  const keys=Object.keys(ltLv);
-  if(!keys.length){t.innerHTML='';return}
-  let h='<thead><tr><th>File</th>';
-  for(const lv of LT_LEVELS)h+=`<th>T${lv}</th>`;
-  h+='</tr></thead><tbody>';
-  for(const k of keys){
-    const lv=ltLv[k];
-    h+=`<tr><td>${S[k]?.l||k}</td>`;
-    for(const l of LT_LEVELS){
-      if(lv[l])h+=`<td>${Math.round(lv[l].hr)}hr / ${lv[l].pct.toFixed(2)}%</td>`;
-      else h+='<td style="color:var(--tx2)">-</td>';
-    }
-    h+='</tr>';
-  }
-  h+='</tbody>';
-  t.innerHTML=h;
-}
-
 /* ===== LT CHART ===== */
-let ltState={xMax:250,yMin:88,yMax:101,xOn:true,yOn:true,dsVis:{},lvVis:{}};
+let ltState={xMax:250,yMin:88,yMax:101,xOn:true,yOn:true,xTicks:true,yTicks:true,white:false,dsVis:{},lvVis:{}};
 let ltRawG={},ltLvG={};
 
 function renderLTC(ltD,ltLv){
@@ -439,6 +410,10 @@ function buildCtrl(){
   h+=`<label>Y max(%)<input type="number" id="cyx" value="${ltState.yMax}" step="1"></label>`;
   h+=`<button id="txb" class="${ltState.xOn?'active':''}">X Axis</button>`;
   h+=`<button id="tyb" class="${ltState.yOn?'active':''}">Y Axis</button>`;
+  h+=`<button id="txn">X Ticks</button>`;
+  h+=`<button id="tyn">Y Ticks</button>`;
+  h+=`<button id="twb" class="${ltState.white?'active':''}">WHITE</button>`;
+  h+=`<button id="ccpy">COPY CHART</button>`;
   h+=`<button id="capply">APPLY</button>`;
   h+='<div class="sep"></div>';
   for(const k in ltRawG){
@@ -454,6 +429,10 @@ function buildCtrl(){
   $('capply').onclick=applyLT;
   $('txb').onclick=function(){ltState.xOn=!ltState.xOn;this.classList.toggle('active');drawLT()};
   $('tyb').onclick=function(){ltState.yOn=!ltState.yOn;this.classList.toggle('active');drawLT()};
+  $('txn').onclick=function(){ltState.xTicks=!ltState.xTicks;this.classList.toggle('active');drawLT()};
+  $('tyn').onclick=function(){ltState.yTicks=!ltState.yTicks;this.classList.toggle('active');drawLT()};
+  $('twb').onclick=function(){ltState.white=!ltState.white;this.classList.toggle('active');$('ltC').closest('.ch-wrap').classList.toggle('wh',ltState.white);drawLT()};
+  $('ccpy').onclick=copyChart;
   el.querySelectorAll('[data-ds]').forEach(cb=>cb.onchange=function(){ltState.dsVis[this.dataset.ds]=this.checked;drawLT()});
   el.querySelectorAll('[data-lv]').forEach(cb=>cb.onchange=function(){ltState.lvVis[parseInt(this.dataset.lv)]=this.checked;drawLT()});
 }
@@ -467,9 +446,11 @@ function applyLT(){
 
 function drawLT(){
   if(ltCI){ltCI.destroy();ltCI=null}
+  const w=ltState.white;
+  const tc=w?'#333':'#7d8590', gc=w?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.06)', lc=w?'#222':'#e6edf3';
+  const rlc=w?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)';
   const ds=[];
 
-  // Data lines
   for(const[k,d]of Object.entries(ltRawG)){
     if(!ltState.dsVis[k]||!d.h.length)continue;
     ds.push({
@@ -486,13 +467,12 @@ function drawLT(){
     });
   }
 
-  // Reference lines
   for(const lv of LT_LEVELS){
     if(!ltState.lvVis[lv])continue;
     ds.push({
       label:'T'+lv+' ('+lv+'%)',
       data:[{x:0,y:lv},{x:ltState.xMax,y:lv}],
-      borderColor:'rgba(255,255,255,0.18)',
+      borderColor:rlc,
       borderDash:[8,4],
       borderWidth:1,
       pointRadius:0,
@@ -515,25 +495,27 @@ function drawLT(){
           type:'linear',
           display:ltState.xOn,
           min:0,max:ltState.xMax,
-          title:{display:ltState.xOn,text:'Hour Passed (hrs)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},
-          ticks:{color:'#7d8590'},
-          grid:{color:'rgba(255,255,255,0.06)'},
+          title:{display:ltState.xOn,text:'Time (hours)',color:tc,font:{family:'Consolas',weight:'bold'}},
+          ticks:{display:ltState.xTicks,color:tc},
+          grid:{color:gc},
+          border:{color:w?'#999':'#30363d'},
         },
         y:{
           display:ltState.yOn,
           min:ltState.yMin,max:ltState.yMax,
-          title:{display:ltState.yOn,text:'Relative Luminance (%)',color:'#7d8590',font:{family:'Consolas',weight:'bold'}},
-          ticks:{color:'#7d8590',stepSize:1},
-          grid:{color:'rgba(255,255,255,0.06)'},
+          title:{display:ltState.yOn,text:'Luminance (%)',color:tc,font:{family:'Consolas',weight:'bold'}},
+          ticks:{display:ltState.yTicks,color:tc,stepSize:1},
+          grid:{color:gc},
+          border:{color:w?'#999':'#30363d'},
         },
       },
       plugins:{
-        legend:{position:'top',labels:{color:'#e6edf3',usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:11}}},
+        legend:{position:'top',labels:{color:lc,usePointStyle:true,pointStyle:'line',font:{family:'Consolas',size:11}}},
         tooltip:{
-          backgroundColor:'#21262d',
-          titleColor:'#e6edf3',
-          bodyColor:'#e6edf3',
-          borderColor:'#30363d',
+          backgroundColor:w?'#fff':'#21262d',
+          titleColor:w?'#222':'#e6edf3',
+          bodyColor:w?'#222':'#e6edf3',
+          borderColor:w?'#ccc':'#30363d',
           borderWidth:1,
           callbacks:{
             label:c=>{
@@ -544,6 +526,18 @@ function drawLT(){
         }
       }
     }
+  });
+}
+
+function copyChart(){
+  const cv=$('ltC');
+  cv.toBlob(blob=>{
+    navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(()=>{
+      const b=$('ccpy');if(b){b.textContent='Copied!';setTimeout(()=>b.textContent='COPY CHART',1500)}
+    }).catch(()=>{
+      const url=cv.toDataURL('image/png');
+      const a=document.createElement('a');a.href=url;a.download='LT_Chart.png';a.click();
+    });
   });
 }
 
