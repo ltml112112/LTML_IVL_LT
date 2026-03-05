@@ -335,33 +335,46 @@ async function run(){
 /* ===== IVL TABLE ===== */
 function renderIVL(ivl,ltLv){
   const t=$('ivlT');
-  let h='<thead><tr><th>Block</th><th>Row</th><th>Voltage (V)</th><th>Eff (cd/A)</th><th>EQE (%)</th><th>CIE x</th><th>CIE y</th><th>Peak WL (nm)</th><th>LT</th></tr></thead><tbody>';
+  const nc=8+LT_LEVELS.length;
+  let h='<thead><tr><th>Block</th><th>Row</th><th>Op.V(V)</th><th>EL EFF(cd/A)</th><th>EQE(%)</th><th>CIE(x)</th><th>CIE(y)</th><th>MAX 파장</th>';
+  for(const lv of LT_LEVELS)h+=`<th>LT(${lv})</th>`;
+  h+='</tr></thead><tbody>';
   let bi=0;
   for(const b of BLOCKS){
     const d1=ivl[b.r1],d2=ivl[b.r2];
     if(!d1&&!d2)continue;
     bi++;
-    const lt1=ltLv[b.lt1],lt2=ltLv[b.lt2];
-    const bl1=lt1?bestLT(lt1):null,bl2=lt2?bestLT(lt2):null;
+    const lv1=ltLv[b.lt1],lv2=ltLv[b.lt2];
 
-    h+=`<tr class="bh"><td colspan="9">${ci(bi)} ${b.lb}</td></tr>`;
+    h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
     // Row 1
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td><td>1st</td>`;
-    if(d1){h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`}
-    else h+='<td colspan="6" style="color:var(--tx2)">No file</td>';
-    h+=`<td>${bl1?'T'+bl1.lv+'='+Math.round(bl1.hr)+'hr':'-'}</td></tr>`;
+    if(d1)h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`;
+    else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?Math.round(lv1[l].hr):'-'}</td>`;
+    h+='</tr>';
     // Row 2
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td><td>2nd</td>`;
-    if(d2){h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`}
-    else h+='<td colspan="6" style="color:var(--tx2)">No file</td>';
-    h+=`<td>${bl2?'T'+bl2.lv+'='+Math.round(bl2.hr)+'hr':'-'}</td></tr>`;
+    if(d2)h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`;
+    else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?Math.round(lv2[l].hr):'-'}</td>`;
+    h+='</tr>';
     // Eval
-    h+='<tr class="ev"><td>Result</td><td>2nd/1st</td>';
+    h+='<tr class="ev"><td>Result</td><td></td>';
     if(d1&&d2){
-      h+=eTd(d2.volt,d1.volt)+eTd(d2.eff,d1.eff)+eTd(d2.eqe,d1.eqe)+eTd(d2.cx,d1.cx)+eTd(d2.cy,d1.cy)+'<td>-</td>';
-    }else h+='<td colspan="6">-</td>';
-    // LT eval
-    if(bl1&&bl2&&bl1.lv===bl2.lv&&bl1.hr&&bl2.hr){h+=eTd(bl2.hr,bl1.hr)}else h+='<td>-</td>';
+      // Op.V: 1st/2nd (REF/SAMPLE)
+      h+=eTd(d1.volt,d2.volt);
+      // EL EFF, EQE, CIE: 2nd/1st (SAMPLE/REF)
+      h+=eTd(d2.eff,d1.eff)+eTd(d2.eqe,d1.eqe)+eTd(d2.cx,d1.cx)+eTd(d2.cy,d1.cy);
+      // MAX 파장: difference
+      const w1=parseInt(d1.mwl)||0,w2=parseInt(d2.mwl)||0;
+      h+=`<td>${w1&&w2?(w2-w1):'-'}</td>`;
+    }else h+=`<td colspan="6">-</td>`;
+    // LT evals: 2nd/1st
+    for(const l of LT_LEVELS){
+      const v1=lv1&&lv1[l]?lv1[l].hr:null,v2=lv2&&lv2[l]?lv2[l].hr:null;
+      if(v1&&v2)h+=eTd(v2,v1);else h+='<td>-</td>';
+    }
     h+='</tr>';
   }
   h+='</tbody>';
