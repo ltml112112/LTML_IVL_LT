@@ -253,8 +253,8 @@ function detect(name){
   const n=name.toLowerCase();
   let g='';
   if(/^re[fv][_\s]/i.test(n))g='REF';
-  else if(/^sample[_\s]/i.test(n))g='SAMPLE';
-  else if(n.includes('sample'))g='SAMPLE';
+  else if(/^sam(?:ple)?[_\s]/i.test(n))g='SAMPLE';
+  else if(n.includes('sample')||n.includes('sam_'))g='SAMPLE';
   else if(n.includes('ref')||n.includes('rev'))g='REF';
   else return null;
   let t='',num='';
