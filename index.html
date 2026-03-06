@@ -46,6 +46,10 @@ header p{color:var(--tx2);font-size:.8rem}
 .um-list{list-style:none;padding:0;margin:0}
 .um-list li{padding:2px 0;font-size:.72rem;color:#d29922}
 .um-list li::before{content:'• ';color:#6e4000}
+.um-dup{margin-top:.6rem;padding:.5rem .7rem;background:#3d0a0a;border:1px solid #9e2a2a;border-radius:4px;font-size:.75rem;color:#f85149}
+.um-dup .um-title{color:#f85149}
+.um-dup .um-list li{color:#f85149}
+.um-dup .um-list li::before{color:#9e2a2a}
 
 /* Button */
 .btn{display:block;width:100%;padding:.7rem;font-size:.9rem;font-weight:700;color:#fff;background:var(--acc);border:none;border-radius:4px;cursor:pointer;font-family:inherit;transition:.2s}
@@ -283,12 +287,21 @@ function detect(name){
   return S[k]?k:null;
 }
 
+let dup=[];  /* duplicate conflicts: {slot, prev, curr} */
 function handleFiles(files){
-  unm.length=0;
+  unm.length=0;dup.length=0;
+  /* track which slots are assigned in THIS batch */
+  const batch={};
   for(const f of files){
     if(!f.name.toLowerCase().endsWith('.csv'))continue;
     const k=detect(f.name);
-    if(k)assign(k,f);else unm.push(f.name);
+    if(!k){unm.push(f.name);continue}
+    if(fm[k]||batch[k]){
+      const prev=batch[k]||fm[k].name;
+      dup.push({slot:S[k].l,prev:prev,curr:f.name});
+    }
+    batch[k]=f.name;
+    assign(k,f);
   }
   showUnm();updBtn();
 }
@@ -303,11 +316,19 @@ function assign(k,file){
 
 function showUnm(){
   const el=$('um');
-  if(!unm.length){el.classList.add('hidden');return}
+  if(!unm.length&&!dup.length){el.classList.add('hidden');return}
   el.classList.remove('hidden');
-  let h='<div class="um"><div class="um-title">&#9888; 매칭 실패 파일 ('+unm.length+'개)</div><ul class="um-list">';
-  for(const f of unm)h+='<li>'+f+'</li>';
-  h+='</ul></div>';
+  let h='';
+  if(dup.length){
+    h+='<div class="um-dup"><div class="um-title">&#10060; 중복 매칭 ('+dup.length+'건) — 마지막 파일로 덮어씌워집니다</div><ul class="um-list">';
+    for(const d of dup)h+='<li><b>['+d.slot+']</b> '+d.prev+' &rarr; '+d.curr+'</li>';
+    h+='</ul></div>';
+  }
+  if(unm.length){
+    h+='<div class="um"><div class="um-title">&#9888; 매칭 실패 파일 ('+unm.length+'개)</div><ul class="um-list">';
+    for(const f of unm)h+='<li>'+f+'</li>';
+    h+='</ul></div>';
+  }
   el.innerHTML=h;
 }
 
