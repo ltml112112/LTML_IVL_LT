@@ -89,6 +89,13 @@ header p{color:var(--tx2);font-size:.8rem}
 .ct-ni{background:var(--input);border:1px solid var(--bdr);color:inherit;padding:2px 5px;border-radius:3px;font-family:inherit;font-size:.78rem;width:120px}
 .ch-wrap.sq{max-width:600px;height:600px;margin-left:auto;margin-right:auto}
 
+/* Decimal Precision Selector */
+.dp-wrap{display:inline-flex;align-items:center;gap:6px;position:absolute;top:8px;right:80px}
+.dp-wrap .dp-label{color:var(--tx2);font-size:.72rem;font-weight:600}
+.dp-btn{background:var(--bdr);border:1px solid #484f58;color:var(--tx2);padding:2px 8px;border-radius:3px;cursor:pointer;font-size:.7rem;font-family:inherit;transition:.15s}
+.dp-btn:hover{background:var(--acc);color:#000}
+.dp-btn.active{background:var(--acc);color:#000;font-weight:700}
+
 .hidden{display:none}
 .results{animation:fi .3s ease}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
@@ -127,6 +134,12 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <!-- IVL -->
     <div class="card">
         <h2>IVL ANALYSIS</h2>
+        <div class="dp-wrap" id="dpWrap">
+            <span class="dp-label">소수점</span>
+            <button class="dp-btn" data-dp="0">정수</button>
+            <button class="dp-btn active" data-dp="1">1자리</button>
+            <button class="dp-btn" data-dp="2">2자리</button>
+        </div>
         <button class="cpb" onclick="copyTbl('ivlT')">COPY</button>
         <div class="tw"><table class="t" id="ivlT"></table></div>
     </div>
@@ -193,6 +206,8 @@ const LT_LEVELS=[95,94,93,92,91,90];
 const fm={}, pd={};
 let ltCI=null, spCI=null;
 const unm=[];
+let ivlDP=1; /* IVL decimal places: 0=정수, 1=소수1자리, 2=소수2자리 */
+let lastIvl={},lastLtLv={};
 
 const $=id=>document.getElementById(id);
 const dz=$('dz'),fi=$('fi'),fg=$('fg'),abtn=$('abtn'),res=$('res');
@@ -206,6 +221,19 @@ function init(){
   dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');handleFiles(e.dataTransfer.files)};
   fi.onchange=e=>handleFiles(e.target.files);
   abtn.onclick=run;
+  // Decimal precision buttons
+  $('dpWrap').querySelectorAll('.dp-btn').forEach(btn=>{
+    btn.onclick=function(){
+      ivlDP=parseInt(this.dataset.dp);
+      $('dpWrap').querySelectorAll('.dp-btn').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      if(Object.keys(lastIvl).length){
+        renderTbl('ivlT',BLOCKS_MAIN,lastIvl,lastLtLv);
+        const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,lastIvl,lastLtLv);
+        $('ivlExCard').classList.toggle('hidden',!exHas);
+      }
+    };
+  });
 }
 
 function renderGrid(){
@@ -225,8 +253,8 @@ function detect(name){
   const n=name.toLowerCase();
   let g='';
   if(/^re[fv][_\s]/i.test(n))g='REF';
-  else if(/^sample[_\s]/i.test(n))g='SAMPLE';
-  else if(n.includes('sample'))g='SAMPLE';
+  else if(/^sam(?:ple)?[_\s]/i.test(n))g='SAMPLE';
+  else if(n.includes('sample')||n.includes('sam_'))g='SAMPLE';
   else if(n.includes('ref')||n.includes('rev'))g='REF';
   else return null;
   let t='',num='';
@@ -344,6 +372,7 @@ async function run(){
       if(S[k].t==='IVL'&&pd[k])ivl[k]=aIVL(pd[k]);
       if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
     }
+    lastIvl=ivl;lastLtLv=ltLv;
     renderTbl('ivlT',BLOCKS_MAIN,ivl,ltLv);
     const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,ivl,ltLv);
     $('ivlExCard').classList.toggle('hidden',!exHas);
@@ -372,17 +401,17 @@ function renderTbl(tblId,blocks,ivl,ltLv){
     const lv1=ltLv[b.lt1],lv2=ltLv[b.lt2];
 
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
-    // Row 1
+    // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
-    if(d1)h+=nTd(d1.volt,4)+nTd(d1.eff,2)+nTd(d1.eqe,2)+nTd(d1.cx,4)+nTd(d1.cy,4)+`<td>${d1.mwl||'-'}</td>`;
+    if(d1)h+=fTd(d1.volt,2)+fTd(d1.eff,2)+fTd(d1.eqe,2)+fTd(d1.cx,3)+fTd(d1.cy,3)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?Math.round(lv1[l].hr):'-'}</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
     h+='</tr>';
-    // Row 2
+    // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
-    if(d2)h+=nTd(d2.volt,4)+nTd(d2.eff,2)+nTd(d2.eqe,2)+nTd(d2.cx,4)+nTd(d2.cy,4)+`<td>${d2.mwl||'-'}</td>`;
+    if(d2)h+=fTd(d2.volt,2)+fTd(d2.eff,2)+fTd(d2.eqe,2)+fTd(d2.cx,3)+fTd(d2.cy,3)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?Math.round(lv2[l].hr):'-'}</td>`;
+    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
     h+='</tr>';
     // Eval
     h+='<tr class="ev"><td>Result</td>';
@@ -398,7 +427,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
         const pct=v2/v1*100;
         const cls=Math.abs(pct-100)<=5?'blue':'red';
         const warn=(v1<100||v2<100)?'<br><span style="font-size:.65rem;color:#d29922">(100h 미만)</span>':'';
-        h+=`<td class="${cls}">${pct.toFixed(2)}%${warn}</td>`;
+        h+=`<td class="${cls}">${pct.toFixed(ivlDP)}%${warn}</td>`;
       }else h+='<td>-</td>';
     }
     h+='</tr>';
@@ -408,13 +437,16 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   return bi>0;
 }
 
-function nTd(v,d){return`<td>${isNaN(v)?'-':v.toFixed(d)}</td>`}
+function fTd(v,dp){
+  if(isNaN(v))return'<td>-</td>';
+  return`<td>${v.toFixed(dp)}</td>`;
+}
 
 function eTd(num,den){
   if(isNaN(num)||isNaN(den)||den===0)return'<td>-</td>';
   const pct=num/den*100;
   const cls=Math.abs(pct-100)<=5?'blue':'red';
-  return`<td class="${cls}">${pct.toFixed(2)}%</td>`;
+  return`<td class="${cls}">${pct.toFixed(ivlDP)}%</td>`;
 }
 
 function ci(n){return String.fromCodePoint(0x245F+n)}
