@@ -67,6 +67,7 @@ header p{color:var(--tx2);font-size:.8rem}
 .t .ev td{background:#0d1a2d;font-weight:700}
 .t td.blue{color:var(--acc)}
 .t td.red{color:var(--red)}
+.t td.purple{color:#b388ff}
 .t td:first-child{text-align:left;font-weight:600}
 
 /* Copy Button */
@@ -164,6 +165,7 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
 .hm-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.65rem;font-weight:600}
 .hm-tag.blue{background:rgba(88,166,255,.15);color:var(--acc)}
 .hm-tag.red{background:rgba(248,81,73,.15);color:var(--red)}
+.hm-tag.purple{background:rgba(179,136,255,.15);color:#b388ff}
 .hm-tag.green{background:rgba(35,134,54,.15);color:#238636}
 .hm-tag.yellow{background:rgba(210,153,34,.15);color:#d29922}
 .hm-arrow{color:var(--acc);font-size:1.2rem;text-align:center;margin:.3rem 0}
@@ -255,17 +257,20 @@ REF와 SAMPLE 파일이 최소 1개씩 매칭되면 버튼이 활성화됩니다
 <span class="help-step-title">IVL 분석 결과 테이블</span>
 <div class="help-step-desc">
 J=10mA/cm&sup2; 기준으로 <b>전압, 효율, EQE, 색좌표, 파장</b>을 비교합니다.<br>
-Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br>
-<span class="hm-tag blue">&#177;5% 이내 = 정상</span>&ensp;
-<span class="hm-tag red">&#177;5% 초과 = 이탈</span>
+Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
+<b>IVL 항목</b>&ensp;<span class="hm-tag blue">&#177;5% 이내 = 정상</span>&ensp;
+<span class="hm-tag red">&#177;5% 초과 = 이탈</span><br>
+<b>LT 수명</b>&ensp;<span class="hm-tag red">&lt;95% = 이탈</span>&ensp;
+<span class="hm-tag blue">95~105% = 정상</span>&ensp;
+<span class="hm-tag purple">&gt;105% = 우수</span>
 </div>
 <div class="hm-box" style="overflow-x:auto">
 <table class="hm-tbl">
 <tr><th>Block</th><th>Op.V(V)</th><th>EL EFF</th><th>EQE(%)</th><th>LT(95)</th><th>LT(94)</th></tr>
 <tr class="hm-bh"><td colspan="6">&#9312; REF1 vs SAMPLE1</td></tr>
-<tr><td style="text-align:left;font-weight:600">REF IVL-1</td><td>3.85</td><td>12.34</td><td>8.21</td><td>142.5</td><td>168.3</td></tr>
-<tr><td style="text-align:left;font-weight:600">SAMPLE IVL-1</td><td>3.92</td><td>11.87</td><td>7.95</td><td>135.2</td><td>155.7</td></tr>
-<tr class="hm-ev"><td style="text-align:left;font-weight:600">Result</td><td class="hm-blue">98.2%</td><td class="hm-blue">96.2%</td><td class="hm-blue">96.8%</td><td class="hm-blue">94.9%</td><td class="hm-red">92.5%</td></tr>
+<tr><td style="text-align:left;font-weight:600">REF IVL-1</td><td>3.85</td><td>12.34</td><td>8.21</td><td>142.5</td><td>155.7</td></tr>
+<tr><td style="text-align:left;font-weight:600">SAMPLE IVL-1</td><td>3.92</td><td>11.87</td><td>7.95</td><td>165.3</td><td>135.2</td></tr>
+<tr class="hm-ev"><td style="text-align:left;font-weight:600">Result</td><td class="hm-blue">98.2%</td><td class="hm-blue">96.2%</td><td class="hm-blue">96.8%</td><td style="color:#b388ff;font-weight:700">116.0%</td><td style="color:var(--red);font-weight:700">86.8%</td></tr>
 </table>
 </div>
 <div class="hm-tip">
@@ -617,7 +622,8 @@ function aIVL(rows){
     const wl=parseFloat(h[c]),v=parseFloat(r[c]);
     if(!isNaN(wl)&&!isNaN(v)){spec.push({x:wl,y:v});if(v>mx){mx=v;mwl=h[c]||''}}
   }
-  return{absJ:parseFloat(r[5]),volt:parseFloat(r[1]),eff:parseFloat(r[7]),eqe:parseFloat(r[9]),cx:parseFloat(r[10]),cy:parseFloat(r[11]),mwl,spec};
+  return{absJ:parseFloat(r[5]),volt:parseFloat(r[1]),eff:parseFloat(r[7]),eqe:parseFloat(r[9]),cx:parseFloat(r[10]),cy:parseFloat(r[11]),mwl,spec,
+    voltR:r[1],effR:r[7],eqeR:r[9],cxR:r[10],cyR:r[11]};
 }
 
 /* ===== LT ===== */
@@ -709,17 +715,17 @@ function renderTbl(tblId,blocks,ivl,ltLv){
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
     // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
-    if(d1)h+=fTd(d1.volt,2)+fTd(d1.eff,2)+fTd(d1.eqe,2)+fTd(d1.cx,3)+fTd(d1.cy,3)+`<td>${d1.mwl||'-'}</td>`;
+    if(d1)h+=fTd(d1.volt,2,d1.voltR)+fTd(d1.eff,2,d1.effR)+fTd(d1.eqe,2,d1.eqeR)+fTd(d1.cx,3,d1.cxR)+fTd(d1.cy,3,d1.cyR)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
-    if(hasTime)h+=`<td>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
+    for(const l of curLevels){const hr=lv1&&lv1[l]?lv1[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    if(hasTime)h+=`<td${mh1!=null?' data-raw="'+mh1+'"':''}>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
-    if(d2)h+=fTd(d2.volt,2)+fTd(d2.eff,2)+fTd(d2.eqe,2)+fTd(d2.cx,3)+fTd(d2.cy,3)+`<td>${d2.mwl||'-'}</td>`;
+    if(d2)h+=fTd(d2.volt,2,d2.voltR)+fTd(d2.eff,2,d2.effR)+fTd(d2.eqe,2,d2.eqeR)+fTd(d2.cx,3,d2.cxR)+fTd(d2.cy,3,d2.cyR)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
-    if(hasTime)h+=`<td>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
+    for(const l of curLevels){const hr=lv2&&lv2[l]?lv2[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    if(hasTime)h+=`<td${mh2!=null?' data-raw="'+mh2+'"':''}>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Eval
     h+='<tr class="ev"><td>Result</td>';
@@ -733,7 +739,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
       const v1=lv1&&lv1[l]?lv1[l].hr:null,v2=lv2&&lv2[l]?lv2[l].hr:null;
       if(v1!=null&&v2!=null){
         const pct=v2/v1*100;
-        const cls=Math.abs(pct-100)<=5?'blue':'red';
+        const cls=pct<95?'red':pct>105?'purple':'blue';
         const warn=(v1<100||v2<100)?'<br><span style="font-size:.65rem;color:#d29922">(100h 미만)</span>':'';
         h+=`<td class="${cls}">${pct.toFixed(ivlDP)}%${warn}</td>`;
       }else h+='<td>-</td>';
@@ -746,9 +752,9 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   return bi>0;
 }
 
-function fTd(v,dp){
+function fTd(v,dp,raw){
   if(isNaN(v))return'<td>-</td>';
-  return`<td>${v.toFixed(dp)}</td>`;
+  return`<td${raw!=null?' data-raw="'+raw+'"':''}>${v.toFixed(dp)}</td>`;
 }
 
 function eTd(num,den){
@@ -761,7 +767,7 @@ function eTd(num,den){
 function ci(n){return String.fromCodePoint(0x245F+n)}
 
 /* ===== LT CHART ===== */
-let ltState={xMax:150,yMin:95,yMax:101,smooth:1,xOn:true,yOn:true,xTicks:true,yTicks:true,white:true,square:true,dsVis:{},dsNames:{}};
+let ltState={xMax:150,yMin:95,yMax:101,smooth:1,xOn:true,yOn:true,xTicks:true,yTicks:true,gridOn:true,white:true,square:true,dsVis:{},dsNames:{}};
 let ltRawG={},ltLvG={},ltDataMaxHr=500;
 
 function renderLTC(ltD,ltLv){
@@ -792,7 +798,7 @@ function buildCtrl(){
   // Row 2: Button groups
   h+='<div class="ct-row">';
   h+=`<div class="ct-grp"><span class="ct-gl">MODE</span><button class="ct-btn${ltState.white?' active':''}" id="twb">WHITE</button><button class="ct-btn${ltState.square?' active':''}" id="tsq">SQUARE</button></div>`;
-  h+=`<div class="ct-grp"><span class="ct-gl">AXIS</span><button class="ct-btn${ltState.xOn?' active':''}" id="txb">X Label</button><button class="ct-btn${ltState.yOn?' active':''}" id="tyb">Y Label</button><button class="ct-btn${ltState.xTicks?' active':''}" id="txn">X Ticks</button><button class="ct-btn${ltState.yTicks?' active':''}" id="tyn">Y Ticks</button></div>`;
+  h+=`<div class="ct-grp"><span class="ct-gl">AXIS</span><button class="ct-btn${ltState.xOn?' active':''}" id="txb">X Label</button><button class="ct-btn${ltState.yOn?' active':''}" id="tyb">Y Label</button><button class="ct-btn${ltState.xTicks?' active':''}" id="txn">X Ticks</button><button class="ct-btn${ltState.yTicks?' active':''}" id="tyn">Y Ticks</button><button class="ct-btn${ltState.gridOn?' active':''}" id="tgd">Grid</button></div>`;
   h+=`<button class="ct-btn copy" id="ccpy">COPY CHART</button>`;
   h+='</div>';
 
@@ -821,6 +827,7 @@ function buildCtrl(){
   $('tyb').onclick=function(){ltState.yOn=!ltState.yOn;this.classList.toggle('active');drawLT()};
   $('txn').onclick=function(){ltState.xTicks=!ltState.xTicks;this.classList.toggle('active');drawLT()};
   $('tyn').onclick=function(){ltState.yTicks=!ltState.yTicks;this.classList.toggle('active');drawLT()};
+  $('tgd').onclick=function(){ltState.gridOn=!ltState.gridOn;this.classList.toggle('active');drawLT()};
   $('ccpy').onclick=copyChart;
   el.querySelectorAll('[data-ds]').forEach(cb=>cb.onchange=function(){ltState.dsVis[this.dataset.ds]=this.checked;drawLT()});
   el.querySelectorAll('[data-dn]').forEach(inp=>{inp.onchange=function(){ltState.dsNames[this.dataset.dn]=this.value;drawLT()};inp.onclick=function(e){e.stopPropagation()}});
@@ -875,7 +882,7 @@ function ltBuildDS(){
 
 function ltBuildOpts(){
   const w=ltState.white;
-  const tc=w?'#333':'#7d8590', gc=w?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.06)', lc=w?'#222':'#e6edf3';
+  const tc=w?'#333':'#7d8590', gc=ltState.gridOn?(w?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.06)'):'transparent', lc=w?'#222':'#e6edf3';
   return{
     responsive:true,
     maintainAspectRatio:false,
@@ -988,7 +995,7 @@ window.copyTbl=function(id){
   let txt='';
   rows.forEach(r=>{
     const cells=r.querySelectorAll('th,td');
-    txt+=Array.from(cells).map(c=>c.textContent.trim()).join('\t')+'\n';
+    txt+=Array.from(cells).map(c=>c.dataset.raw!=null?c.dataset.raw:c.textContent.trim()).join('\t')+'\n';
   });
   navigator.clipboard.writeText(txt).then(()=>{
     const btn=tbl.closest('.card').querySelector('.cpb');
