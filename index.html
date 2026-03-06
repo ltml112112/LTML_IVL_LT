@@ -134,6 +134,11 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <!-- IVL -->
     <div class="card">
         <h2>IVL ANALYSIS</h2>
+        <div class="dp-wrap" id="ltModeWrap" style="right:200px">
+            <span class="dp-label">LT</span>
+            <button class="dp-btn active" data-ltm="low">95~90</button>
+            <button class="dp-btn" data-ltm="high">99~96</button>
+        </div>
         <div class="dp-wrap" id="dpWrap">
             <span class="dp-label">소수점</span>
             <button class="dp-btn" data-dp="0">정수</button>
@@ -201,13 +206,16 @@ const COL={REF_LT1:'#4a9eff',REF_LT2:'#a855f7',SAMPLE_LT1:'#ef4444',SAMPLE_LT2:'
            REF_IVL1:'#4a9eff',REF_IVL2:'#a855f7',SAMPLE_IVL1:'#ef4444',SAMPLE_IVL2:'#f59e0b'};
 
 const LT_LEVELS=[95,94,93,92,91,90];
+const LT_LEVELS_HIGH=[99,98,97,96];
+const LT_ALL_LEVELS=[99,98,97,96,95,94,93,92,91,90];
 
 /* ===== STATE ===== */
 const fm={}, pd={};
 let ltCI=null, spCI=null;
 const unm=[];
 let ivlDP=1; /* IVL decimal places: 0=정수, 1=소수1자리, 2=소수2자리 */
-let lastIvl={},lastLtLv={};
+let ltMode='low'; /* 'low'=LT95~90, 'high'=LT99~96 */
+let lastIvl={},lastLtLv={},lastLtMaxHr={};
 
 const $=id=>document.getElementById(id);
 const dz=$('dz'),fi=$('fi'),fg=$('fg'),abtn=$('abtn'),res=$('res');
@@ -227,11 +235,16 @@ function init(){
       ivlDP=parseInt(this.dataset.dp);
       $('dpWrap').querySelectorAll('.dp-btn').forEach(b=>b.classList.remove('active'));
       this.classList.add('active');
-      if(Object.keys(lastIvl).length){
-        renderTbl('ivlT',BLOCKS_MAIN,lastIvl,lastLtLv);
-        const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,lastIvl,lastLtLv);
-        $('ivlExCard').classList.toggle('hidden',!exHas);
-      }
+      reRenderTbls();
+    };
+  });
+  // LT mode tab buttons
+  $('ltModeWrap').querySelectorAll('.dp-btn').forEach(btn=>{
+    btn.onclick=function(){
+      ltMode=this.dataset.ltm;
+      $('ltModeWrap').querySelectorAll('.dp-btn').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      reRenderTbls();
     };
   });
 }
@@ -339,7 +352,7 @@ function pLT(rows){
 
 function ltAll(hours,lum){
   const r={};
-  for(const lv of LT_LEVELS){
+  for(const lv of LT_ALL_LEVELS){
     // Find last index where lum >= lv (scan backward)
     let lastAbove=-1;
     for(let i=lum.length-1;i>=0;i--){if(lum[i]>=lv){lastAbove=i;break}}
@@ -362,6 +375,14 @@ function bestLT(levels){
   return null;
 }
 
+function reRenderTbls(){
+  if(Object.keys(lastIvl).length||Object.keys(lastLtLv).length){
+    renderTbl('ivlT',BLOCKS_MAIN,lastIvl,lastLtLv);
+    const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,lastIvl,lastLtLv);
+    $('ivlExCard').classList.toggle('hidden',!exHas);
+  }
+}
+
 /* ===== MAIN ===== */
 async function run(){
   abtn.disabled=true;abtn.textContent='Analyzing...';
@@ -370,7 +391,7 @@ async function run(){
     const ivl={},ltR={},ltD={},ltLv={};
     for(const k of Object.keys(S)){
       if(S[k].t==='IVL'&&pd[k])ivl[k]=aIVL(pd[k]);
-      if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k]}
+      if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k];if(ltR[k].h.length)lastLtMaxHr[k]=ltR[k].h[ltR[k].h.length-1]}
     }
     lastIvl=ivl;lastLtLv=ltLv;
     renderTbl('ivlT',BLOCKS_MAIN,ivl,ltLv);
@@ -389,9 +410,12 @@ async function run(){
 /* ===== IVL TABLE ===== */
 function renderTbl(tblId,blocks,ivl,ltLv){
   const t=$(tblId);
-  const nc=7+LT_LEVELS.length;
+  const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
+  const hasTime=ltMode==='high';
+  const nc=7+curLevels.length+(hasTime?1:0);
   let h='<thead><tr><th>Block</th><th>Op.V(V)</th><th>EL EFF(cd/A)</th><th>EQE(%)</th><th>CIE(x)</th><th>CIE(y)</th><th>MAX 파장</th>';
-  for(const lv of LT_LEVELS)h+=`<th>LT(${lv})</th>`;
+  for(const lv of curLevels)h+=`<th>LT(${lv})</th>`;
+  if(hasTime)h+='<th>측정시간</th>';
   h+='</tr></thead><tbody>';
   let bi=0;
   for(const b of blocks){
@@ -399,19 +423,22 @@ function renderTbl(tblId,blocks,ivl,ltLv){
     if(!d1&&!d2)continue;
     bi++;
     const lv1=ltLv[b.lt1],lv2=ltLv[b.lt2];
+    const mh1=lastLtMaxHr[b.lt1],mh2=lastLtMaxHr[b.lt2];
 
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
     // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
     if(d1)h+=fTd(d1.volt,2)+fTd(d1.eff,2)+fTd(d1.eqe,2)+fTd(d1.cx,3)+fTd(d1.cy,3)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
+    for(const l of curLevels)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
+    if(hasTime)h+=`<td>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
     if(d2)h+=fTd(d2.volt,2)+fTd(d2.eff,2)+fTd(d2.eqe,2)+fTd(d2.cx,3)+fTd(d2.cy,3)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of LT_LEVELS)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
+    for(const l of curLevels)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
+    if(hasTime)h+=`<td>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Eval
     h+='<tr class="ev"><td>Result</td>';
@@ -421,7 +448,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
       const w1=parseInt(d1.mwl)||0,w2=parseInt(d2.mwl)||0;
       h+=`<td>${w1&&w2?(w2-w1):'-'}</td>`;
     }else h+=`<td colspan="6">-</td>`;
-    for(const l of LT_LEVELS){
+    for(const l of curLevels){
       const v1=lv1&&lv1[l]?lv1[l].hr:null,v2=lv2&&lv2[l]?lv2[l].hr:null;
       if(v1!=null&&v2!=null){
         const pct=v2/v1*100;
@@ -430,6 +457,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
         h+=`<td class="${cls}">${pct.toFixed(ivlDP)}%${warn}</td>`;
       }else h+='<td>-</td>';
     }
+    if(hasTime)h+='<td>-</td>';
     h+='</tr>';
   }
   h+='</tbody>';
