@@ -617,7 +617,8 @@ function aIVL(rows){
     const wl=parseFloat(h[c]),v=parseFloat(r[c]);
     if(!isNaN(wl)&&!isNaN(v)){spec.push({x:wl,y:v});if(v>mx){mx=v;mwl=h[c]||''}}
   }
-  return{absJ:parseFloat(r[5]),volt:parseFloat(r[1]),eff:parseFloat(r[7]),eqe:parseFloat(r[9]),cx:parseFloat(r[10]),cy:parseFloat(r[11]),mwl,spec};
+  return{absJ:parseFloat(r[5]),volt:parseFloat(r[1]),eff:parseFloat(r[7]),eqe:parseFloat(r[9]),cx:parseFloat(r[10]),cy:parseFloat(r[11]),mwl,spec,
+    voltR:r[1],effR:r[7],eqeR:r[9],cxR:r[10],cyR:r[11]};
 }
 
 /* ===== LT ===== */
@@ -709,17 +710,17 @@ function renderTbl(tblId,blocks,ivl,ltLv){
     h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
     // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
-    if(d1)h+=fTd(d1.volt,2)+fTd(d1.eff,2)+fTd(d1.eqe,2)+fTd(d1.cx,3)+fTd(d1.cy,3)+`<td>${d1.mwl||'-'}</td>`;
+    if(d1)h+=fTd(d1.volt,2,d1.voltR)+fTd(d1.eff,2,d1.effR)+fTd(d1.eqe,2,d1.eqeR)+fTd(d1.cx,3,d1.cxR)+fTd(d1.cy,3,d1.cyR)+`<td>${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels)h+=`<td>${lv1&&lv1[l]?lv1[l].hr.toFixed(2):'-'}</td>`;
-    if(hasTime)h+=`<td>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
+    for(const l of curLevels){const hr=lv1&&lv1[l]?lv1[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    if(hasTime)h+=`<td${mh1!=null?' data-raw="'+mh1+'"':''}>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
-    if(d2)h+=fTd(d2.volt,2)+fTd(d2.eff,2)+fTd(d2.eqe,2)+fTd(d2.cx,3)+fTd(d2.cy,3)+`<td>${d2.mwl||'-'}</td>`;
+    if(d2)h+=fTd(d2.volt,2,d2.voltR)+fTd(d2.eff,2,d2.effR)+fTd(d2.eqe,2,d2.eqeR)+fTd(d2.cx,3,d2.cxR)+fTd(d2.cy,3,d2.cyR)+`<td>${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels)h+=`<td>${lv2&&lv2[l]?lv2[l].hr.toFixed(2):'-'}</td>`;
-    if(hasTime)h+=`<td>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
+    for(const l of curLevels){const hr=lv2&&lv2[l]?lv2[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    if(hasTime)h+=`<td${mh2!=null?' data-raw="'+mh2+'"':''}>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Eval
     h+='<tr class="ev"><td>Result</td>';
@@ -746,9 +747,9 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   return bi>0;
 }
 
-function fTd(v,dp){
+function fTd(v,dp,raw){
   if(isNaN(v))return'<td>-</td>';
-  return`<td>${v.toFixed(dp)}</td>`;
+  return`<td${raw!=null?' data-raw="'+raw+'"':''}>${v.toFixed(dp)}</td>`;
 }
 
 function eTd(num,den){
@@ -988,7 +989,7 @@ window.copyTbl=function(id){
   let txt='';
   rows.forEach(r=>{
     const cells=r.querySelectorAll('th,td');
-    txt+=Array.from(cells).map(c=>c.textContent.trim()).join('\t')+'\n';
+    txt+=Array.from(cells).map(c=>c.dataset.raw!=null?c.dataset.raw:c.textContent.trim()).join('\t')+'\n';
   });
   navigator.clipboard.writeText(txt).then(()=>{
     const btn=tbl.closest('.card').querySelector('.cpb');
