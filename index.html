@@ -32,16 +32,20 @@ header p{color:var(--tx2);font-size:.8rem}
 .dz-hint{color:var(--tx2);font-size:.75rem;margin-top:.3rem}
 
 /* File Grid */
-.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.4rem}
-.fs{display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border:1px solid var(--bdr);border-radius:4px;font-size:.78rem}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.4rem}
+.fs{display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;border:1px solid var(--bdr);border-radius:4px;font-size:.78rem}
 .fs.ok{border-color:#238636;background:#0d1117}
-.fs .lb{font-weight:700;min-width:95px;color:var(--acc)}
-.fs .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+.fs .lb{font-weight:700;min-width:100px;flex-shrink:0;color:var(--acc)}
+.fs .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2);font-size:.72rem;direction:rtl;text-align:left}
 .fs .st{flex-shrink:0}
 .fs .mb{background:var(--bdr);border:none;color:var(--tx2);padding:1px 5px;border-radius:3px;cursor:pointer;font-size:.7rem}
 .fs .mb:hover{background:var(--acc);color:#000}
 .fs input[type=file]{display:none}
-.um{margin-top:.4rem;padding:.4rem .6rem;background:#2d1b00;border:1px solid #6e4000;border-radius:4px;font-size:.75rem;color:#d29922}
+.um{margin-top:.6rem;padding:.5rem .7rem;background:#2d1b00;border:1px solid #6e4000;border-radius:4px;font-size:.75rem;color:#d29922}
+.um-title{font-weight:700;margin-bottom:.3rem}
+.um-list{list-style:none;padding:0;margin:0}
+.um-list li{padding:2px 0;font-size:.72rem;color:#d29922}
+.um-list li::before{content:'• ';color:#6e4000}
 
 /* Button */
 .btn{display:block;width:100%;padding:.7rem;font-size:.9rem;font-weight:700;color:#fff;background:var(--acc);border:none;border-radius:4px;cursor:pointer;font-family:inherit;transition:.2s}
@@ -263,13 +267,14 @@ function renderGrid(){
 
 /* ===== FILE DETECT ===== */
 function detect(name){
-  const n=name.toLowerCase();
+  /* strip leading special chars (★, *, etc.) then match strictly */
+  const n=name.replace(/^[^a-zA-Z0-9]+/,'').toLowerCase();
   let g='';
-  if(/sample/i.test(n)||/sam[_\s]/i.test(n))g='SAMPLE';
-  else if(/re[fv]/i.test(n))g='REF';
+  if(/^ref[_\s]/i.test(n))g='REF';
+  else if(/^sam(?:ple)?[_\s]/i.test(n))g='SAMPLE';
   else return null;
   let t='',num='';
-  const iv=n.match(/ivl\s*(\d)/),lt=n.match(/lt\s*(\d)/);
+  const iv=n.match(/ivl\s*(\d)/),lt=n.match(/(?:^|[_\s])lt\s*(\d)/);
   if(iv){t='IVL';num=iv[1]}else if(lt){t='LT';num=lt[1]}
   else if(n.includes('ivl')){t='IVL';num=n.includes('2')?'2':'1'}
   else if(n.includes('lt')||n.includes('\uc218\uba85')){t='LT';num=n.includes('2')?'2':'1'}
@@ -300,7 +305,10 @@ function showUnm(){
   const el=$('um');
   if(!unm.length){el.classList.add('hidden');return}
   el.classList.remove('hidden');
-  el.innerHTML='<div class="um">&#9888; Unmatched: '+unm.join(', ')+'</div>';
+  let h='<div class="um"><div class="um-title">&#9888; 매칭 실패 파일 ('+unm.length+'개)</div><ul class="um-list">';
+  for(const f of unm)h+='<li>'+f+'</li>';
+  h+='</ul></div>';
+  el.innerHTML=h;
 }
 
 function updBtn(){
