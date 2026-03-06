@@ -67,6 +67,7 @@ header p{color:var(--tx2);font-size:.8rem}
 .t .ev td{background:#0d1a2d;font-weight:700}
 .t td.blue{color:var(--acc)}
 .t td.red{color:var(--red)}
+.t td.purple{color:#b388ff}
 .t td:first-child{text-align:left;font-weight:600}
 
 /* Copy Button */
@@ -164,6 +165,7 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
 .hm-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.65rem;font-weight:600}
 .hm-tag.blue{background:rgba(88,166,255,.15);color:var(--acc)}
 .hm-tag.red{background:rgba(248,81,73,.15);color:var(--red)}
+.hm-tag.purple{background:rgba(179,136,255,.15);color:#b388ff}
 .hm-tag.green{background:rgba(35,134,54,.15);color:#238636}
 .hm-tag.yellow{background:rgba(210,153,34,.15);color:#d29922}
 .hm-arrow{color:var(--acc);font-size:1.2rem;text-align:center;margin:.3rem 0}
@@ -255,17 +257,20 @@ REF와 SAMPLE 파일이 최소 1개씩 매칭되면 버튼이 활성화됩니다
 <span class="help-step-title">IVL 분석 결과 테이블</span>
 <div class="help-step-desc">
 J=10mA/cm&sup2; 기준으로 <b>전압, 효율, EQE, 색좌표, 파장</b>을 비교합니다.<br>
-Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br>
-<span class="hm-tag blue">&#177;5% 이내 = 정상</span>&ensp;
-<span class="hm-tag red">&#177;5% 초과 = 이탈</span>
+Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
+<b>IVL 항목</b>&ensp;<span class="hm-tag blue">&#177;5% 이내 = 정상</span>&ensp;
+<span class="hm-tag red">&#177;5% 초과 = 이탈</span><br>
+<b>LT 수명</b>&ensp;<span class="hm-tag red">&lt;95% = 이탈</span>&ensp;
+<span class="hm-tag blue">95~105% = 정상</span>&ensp;
+<span class="hm-tag purple">&gt;105% = 우수</span>
 </div>
 <div class="hm-box" style="overflow-x:auto">
 <table class="hm-tbl">
 <tr><th>Block</th><th>Op.V(V)</th><th>EL EFF</th><th>EQE(%)</th><th>LT(95)</th><th>LT(94)</th></tr>
 <tr class="hm-bh"><td colspan="6">&#9312; REF1 vs SAMPLE1</td></tr>
-<tr><td style="text-align:left;font-weight:600">REF IVL-1</td><td>3.85</td><td>12.34</td><td>8.21</td><td>142.5</td><td>168.3</td></tr>
-<tr><td style="text-align:left;font-weight:600">SAMPLE IVL-1</td><td>3.92</td><td>11.87</td><td>7.95</td><td>135.2</td><td>155.7</td></tr>
-<tr class="hm-ev"><td style="text-align:left;font-weight:600">Result</td><td class="hm-blue">98.2%</td><td class="hm-blue">96.2%</td><td class="hm-blue">96.8%</td><td class="hm-blue">94.9%</td><td class="hm-red">92.5%</td></tr>
+<tr><td style="text-align:left;font-weight:600">REF IVL-1</td><td>3.85</td><td>12.34</td><td>8.21</td><td>142.5</td><td>155.7</td></tr>
+<tr><td style="text-align:left;font-weight:600">SAMPLE IVL-1</td><td>3.92</td><td>11.87</td><td>7.95</td><td>165.3</td><td>135.2</td></tr>
+<tr class="hm-ev"><td style="text-align:left;font-weight:600">Result</td><td class="hm-blue">98.2%</td><td class="hm-blue">96.2%</td><td class="hm-blue">96.8%</td><td style="color:#b388ff;font-weight:700">116.0%</td><td style="color:var(--red);font-weight:700">86.8%</td></tr>
 </table>
 </div>
 <div class="hm-tip">
@@ -734,7 +739,7 @@ function renderTbl(tblId,blocks,ivl,ltLv){
       const v1=lv1&&lv1[l]?lv1[l].hr:null,v2=lv2&&lv2[l]?lv2[l].hr:null;
       if(v1!=null&&v2!=null){
         const pct=v2/v1*100;
-        const cls=Math.abs(pct-100)<=5?'blue':'red';
+        const cls=pct<95?'red':pct>105?'purple':'blue';
         const warn=(v1<100||v2<100)?'<br><span style="font-size:.65rem;color:#d29922">(100h 미만)</span>':'';
         h+=`<td class="${cls}">${pct.toFixed(ivlDP)}%${warn}</td>`;
       }else h+='<td>-</td>';
