@@ -108,6 +108,68 @@ header p{color:var(--tx2);font-size:.8rem}
 .results{animation:fi .3s ease}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
 footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
+
+/* Help Button */
+.help-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);border-radius:4px;border:1.5px solid var(--bdr);background:var(--card);color:var(--tx2);font-size:.72rem;font-weight:600;cursor:pointer;padding:4px 10px;transition:.2s;font-family:inherit;letter-spacing:.3px}
+.help-btn:hover{border-color:var(--acc);color:var(--acc);background:#1c2129}
+
+/* Help Modal */
+.help-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.help-overlay.show{opacity:1;pointer-events:auto}
+.help-modal{background:var(--card);border:1px solid var(--bdr);border-radius:10px;width:92%;max-width:680px;max-height:85vh;overflow-y:auto;padding:0;position:relative;transform:translateY(20px);transition:transform .25s}
+.help-overlay.show .help-modal{transform:translateY(0)}
+.help-modal::-webkit-scrollbar{width:6px}
+.help-modal::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.help-modal::-webkit-scrollbar-track{background:transparent}
+.help-close{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;background:var(--hdr);border-bottom:1px solid var(--bdr);border-radius:10px 10px 0 0}
+.help-close h3{color:var(--acc);font-size:1rem;margin:0}
+.help-close button{background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1}
+.help-close button:hover{color:var(--red)}
+.help-body{padding:1.2rem}
+.help-step{margin-bottom:1.6rem}
+.help-step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--acc);color:#000;font-size:.8rem;font-weight:700;margin-right:8px;flex-shrink:0}
+.help-step-title{font-size:.95rem;font-weight:700;color:var(--tx);display:inline}
+.help-step-desc{color:var(--tx2);font-size:.82rem;margin-top:.5rem;line-height:1.6}
+.help-step-desc b{color:var(--tx)}
+.help-step-desc .acc{color:var(--acc)}
+
+/* Mini mockup styles */
+.hm-box{background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:.7rem;margin-top:.6rem;font-size:.75rem}
+.hm-dz{border:2px dashed var(--bdr);border-radius:5px;padding:.8rem;text-align:center;color:var(--tx2);font-size:.72rem}
+.hm-dz .hm-ic{font-size:1.4rem;margin-bottom:4px}
+.hm-slot{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--bdr);border-radius:3px;margin:3px 0;font-size:.7rem}
+.hm-slot.ok{border-color:#238636;background:rgba(35,134,54,.1)}
+.hm-slot .hm-lb{color:var(--acc);font-weight:700;min-width:80px}
+.hm-slot .hm-fn{color:var(--tx2);flex:1;font-size:.65rem}
+.hm-slot .hm-st{font-size:.75rem}
+.hm-slot .hm-clip{background:var(--bdr);border:none;color:var(--tx2);padding:1px 5px;border-radius:2px;font-size:.6rem;cursor:default}
+.hm-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.hm-btn{display:block;width:100%;padding:6px;text-align:center;background:var(--acc);color:#000;border-radius:4px;font-weight:700;font-size:.78rem;margin-top:.5rem}
+.hm-btn.dis{background:var(--bdr);color:var(--tx2)}
+.hm-tbl{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.65rem}
+.hm-tbl th,.hm-tbl td{border:1px solid var(--bdr);padding:2px 5px;text-align:center}
+.hm-tbl th{background:var(--hdr);color:var(--acc);font-weight:600}
+.hm-tbl .hm-bh{background:#1c2333;text-align:left;font-weight:700;color:var(--tx)}
+.hm-tbl .hm-ev td{background:#0d1a2d;font-weight:700}
+.hm-tbl .hm-blue{color:var(--acc)}
+.hm-tbl .hm-red{color:var(--red)}
+.hm-ctrl{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:.5rem}
+.hm-ctrl span{font-size:.6rem;color:var(--tx2)}
+.hm-ctrl-btn{background:var(--bdr);border:1px solid #484f58;color:var(--tx2);padding:2px 6px;border-radius:3px;font-size:.6rem;cursor:default}
+.hm-ctrl-btn.on{background:var(--acc);color:#000}
+.hm-slider{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:4px;padding:3px 6px;font-size:.6rem;color:var(--tx2)}
+.hm-slider input[type=range]{width:60px;height:4px}
+.hm-chart{background:#fff;border:1px solid #ccc;border-radius:4px;height:80px;display:flex;align-items:center;justify-content:center;margin-top:.5rem;font-size:.65rem;color:#999;position:relative;overflow:hidden}
+.hm-chart svg{width:100%;height:100%;position:absolute;top:0;left:0}
+.hm-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.65rem;font-weight:600}
+.hm-tag.blue{background:rgba(88,166,255,.15);color:var(--acc)}
+.hm-tag.red{background:rgba(248,81,73,.15);color:var(--red)}
+.hm-tag.green{background:rgba(35,134,54,.15);color:#238636}
+.hm-tag.yellow{background:rgba(210,153,34,.15);color:#d29922}
+.hm-arrow{color:var(--acc);font-size:1.2rem;text-align:center;margin:.3rem 0}
+.hm-sep{border:none;border-top:1px solid var(--bdr);margin:1.2rem 0}
+.hm-tip{background:#1c2333;border:1px solid var(--bdr);border-radius:5px;padding:.5rem .7rem;margin-top:.5rem;font-size:.72rem;color:var(--tx2);line-height:1.5}
+.hm-tip b{color:var(--acc)}
 </style>
 </head>
 <body>
@@ -116,7 +178,199 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <div class="ci" onclick="location.reload()" style="cursor:pointer"><img src="LT소재 로고(영문).jpg" alt="LT Materials"><span>품질경영팀</span></div>
     <h1>OLED IVL &amp; LT Analyzer</h1>
     <p>Raw Data CSV Upload &rarr; Auto Analysis &rarr; Chart</p>
+    <button class="help-btn" id="helpBtn" title="사용 가이드">사용가이드</button>
 </header>
+
+<!-- Help Modal -->
+<div class="help-overlay" id="helpOverlay">
+<div class="help-modal">
+<div class="help-close"><h3>&#128214; 사용 가이드</h3><button id="helpClose">&times;</button></div>
+<div class="help-body">
+
+<!-- STEP 1 -->
+<div class="help-step">
+<span class="help-step-num">1</span>
+<span class="help-step-title">CSV 파일 업로드</span>
+<div class="help-step-desc">
+측정 장비에서 추출한 <b>CSV 파일</b>들을 아래 영역에 <b>드래그 앤 드롭</b>하거나 <b>클릭</b>하여 업로드합니다.<br>
+IVL 파일 + LT 파일을 합쳐 <b>4~8개</b>를 한번에 넣어주세요.
+</div>
+<div class="hm-box">
+<div class="hm-dz">
+<div class="hm-ic">&#128194;</div>
+CSV 파일 드래그 &amp; 드롭 또는 클릭<br>
+<span style="font-size:.6rem;color:var(--tx2)">IVL + LT (REF/SAMPLE 1,2) - 4~8개 파일</span>
+</div>
+</div>
+</div>
+
+<!-- STEP 2 -->
+<div class="help-step">
+<span class="help-step-num">2</span>
+<span class="help-step-title">파일 자동 매칭 확인</span>
+<div class="help-step-desc">
+파일명을 분석하여 <b>8개 슬롯</b>에 자동 배정됩니다.<br>
+<span class="acc">&#9745;</span> 초록 테두리 = 매칭 성공&emsp;
+<span class="acc">&#9744;</span> 회색 = 미배정<br>
+매칭이 안 된 파일은 <b>&#128206; 버튼</b>을 눌러 수동으로 지정할 수 있습니다.
+</div>
+<div class="hm-box">
+<div class="hm-grid">
+<div class="hm-slot ok"><span class="hm-lb">REF IVL-1</span><span class="hm-fn">REF_IVL1_CH082.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot ok"><span class="hm-lb">REF IVL-2</span><span class="hm-fn">REF_IVL2_CH083.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot ok"><span class="hm-lb">SAMPLE IVL-1</span><span class="hm-fn">SAM_IVL1_CH090.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot"><span class="hm-lb">SAMPLE IVL-2</span><span class="hm-fn" style="color:var(--tx2)">-</span><span class="hm-st">&#9744;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot ok"><span class="hm-lb">REF LT-1</span><span class="hm-fn">REF_LT1_CH082.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot ok"><span class="hm-lb">REF LT-2</span><span class="hm-fn">REF_LT2_CH083.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot ok"><span class="hm-lb">SAMPLE LT-1</span><span class="hm-fn">SAM_LT1_CH090.csv</span><span class="hm-st">&#9745;</span><span class="hm-clip">&#128206;</span></div>
+<div class="hm-slot"><span class="hm-lb">SAMPLE LT-2</span><span class="hm-fn" style="color:var(--tx2)">-</span><span class="hm-st">&#9744;</span><span class="hm-clip">&#128206;</span></div>
+</div>
+</div>
+<div class="hm-tip">
+<b>&#128161; 파일명 규칙</b><br>
+파일명이 <b>REF_</b> 또는 <b>SAMPLE_</b>(SAM_)로 시작하고, <b>IVL</b> 또는 <b>LT</b> + 번호가 포함되어야 자동 인식됩니다.<br>
+예: <b>REF_IVL1</b>_CH082.csv, <b>Sample_LT2</b>_test.csv
+</div>
+</div>
+
+<!-- STEP 3 -->
+<div class="help-step">
+<span class="help-step-num">3</span>
+<span class="help-step-title">ANALYZE 버튼 클릭</span>
+<div class="help-step-desc">
+REF와 SAMPLE 파일이 최소 1개씩 매칭되면 버튼이 활성화됩니다.
+</div>
+<div class="hm-box">
+<div class="hm-btn dis">Upload files (0/8)</div>
+<div class="hm-arrow">&#8595;</div>
+<div class="hm-btn">ANALYZE (6 files)</div>
+</div>
+</div>
+
+<hr class="hm-sep">
+
+<!-- STEP 4 -->
+<div class="help-step">
+<span class="help-step-num">4</span>
+<span class="help-step-title">IVL 분석 결과 테이블</span>
+<div class="help-step-desc">
+J=10mA/cm&sup2; 기준으로 <b>전압, 효율, EQE, 색좌표, 파장</b>을 비교합니다.<br>
+Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br>
+<span class="hm-tag blue">&#177;5% 이내 = 정상</span>&ensp;
+<span class="hm-tag red">&#177;5% 초과 = 이탈</span>
+</div>
+<div class="hm-box" style="overflow-x:auto">
+<table class="hm-tbl">
+<tr><th>Block</th><th>Op.V(V)</th><th>EL EFF</th><th>EQE(%)</th><th>LT(95)</th><th>LT(94)</th></tr>
+<tr class="hm-bh"><td colspan="6">&#9312; REF1 vs SAMPLE1</td></tr>
+<tr><td style="text-align:left;font-weight:600">REF IVL-1</td><td>3.85</td><td>12.34</td><td>8.21</td><td>142.5</td><td>168.3</td></tr>
+<tr><td style="text-align:left;font-weight:600">SAMPLE IVL-1</td><td>3.92</td><td>11.87</td><td>7.95</td><td>135.2</td><td>155.7</td></tr>
+<tr class="hm-ev"><td style="text-align:left;font-weight:600">Result</td><td class="hm-blue">98.2%</td><td class="hm-blue">96.2%</td><td class="hm-blue">96.8%</td><td class="hm-blue">94.9%</td><td class="hm-red">92.5%</td></tr>
+</table>
+</div>
+<div class="hm-tip">
+<b>&#128161; 상단 옵션 버튼</b><br>
+&#8226; <b>LT [95~90] [99~96]</b> : 표시할 LT 레벨 범위 전환<br>
+&#8226; <b>소수점 [정수] [1자리] [2자리]</b> : 결과 비율의 소수점 자릿수<br>
+&#8226; <b>COPY</b> : 테이블 내용을 복사하여 Excel에 붙여넣기 가능
+</div>
+</div>
+
+<!-- STEP 5 -->
+<div class="help-step">
+<span class="help-step-num">5</span>
+<span class="help-step-title">LT 수명 그래프</span>
+<div class="help-step-desc">
+시간(hr)에 따른 <b>휘도 변화(%)</b>를 그래프로 표시합니다.<br>
+LT95~LT90 기준선이 점선으로 표시됩니다.
+</div>
+<div class="hm-box">
+<div class="hm-ctrl">
+<div class="hm-slider">X max <input type="range" disabled> <span style="color:var(--acc)">150</span> hr</div>
+<div class="hm-slider">Y min <input type="range" disabled> <span style="color:var(--acc)">95</span> %</div>
+<div class="hm-slider">Smooth <input type="range" disabled> <span style="color:var(--acc)">OFF</span></div>
+</div>
+<div class="hm-ctrl" style="margin-top:3px">
+<span>MODE</span>
+<span class="hm-ctrl-btn on">WHITE</span>
+<span class="hm-ctrl-btn on">SQUARE</span>
+<span style="margin-left:6px">AXIS</span>
+<span class="hm-ctrl-btn on">X Label</span>
+<span class="hm-ctrl-btn on">Y Label</span>
+<span class="hm-ctrl-btn on">X Ticks</span>
+<span class="hm-ctrl-btn on">Y Ticks</span>
+</div>
+<div class="hm-chart">
+<svg viewBox="0 0 300 80" preserveAspectRatio="none">
+<line x1="0" y1="40" x2="300" y2="40" stroke="#ddd" stroke-dasharray="4,3" stroke-width="0.5"/>
+<line x1="0" y1="55" x2="300" y2="55" stroke="#ddd" stroke-dasharray="4,3" stroke-width="0.5"/>
+<polyline points="0,5 30,6 60,8 90,12 120,18 150,25 180,33 210,42 240,52 270,60 300,67" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+<polyline points="0,5 30,7 60,10 90,15 120,22 150,30 180,40 210,50 240,58 270,65 300,72" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+</svg>
+</div>
+</div>
+<div class="hm-tip">
+<b>&#128161; 차트 조작법</b><br>
+&#8226; <b>슬라이더</b>로 축 범위, 스무딩 실시간 조절<br>
+&#8226; <b>WHITE/SQUARE</b> 토글로 배경색, 비율 전환<br>
+&#8226; <b>체크박스</b>로 개별 데이터 표시/숨기기<br>
+&#8226; <b>이름 입력창</b>에서 범례 텍스트 수정 가능<br>
+&#8226; <b>COPY CHART</b> 버튼으로 그래프 이미지 복사
+</div>
+</div>
+
+<!-- STEP 6 -->
+<div class="help-step">
+<span class="help-step-num">6</span>
+<span class="help-step-title">EL 스펙트럼 차트</span>
+<div class="help-step-desc">
+J=10mA/cm&sup2; 지점의 <b>파장별 발광 스펙트럼</b>을 표시합니다.<br>
+X축: 파장(380~780nm), Y축: 강도(a.u.)
+</div>
+<div class="hm-box">
+<div class="hm-chart" style="height:60px">
+<svg viewBox="0 0 300 60" preserveAspectRatio="none">
+<polygon points="80,58 100,50 120,30 135,10 145,5 155,10 170,30 190,50 210,58" fill="rgba(74,158,255,0.15)" stroke="#4a9eff" stroke-width="1"/>
+<polygon points="85,58 105,48 125,28 138,9 148,4 158,9 173,28 195,48 215,58" fill="rgba(239,68,68,0.12)" stroke="#ef4444" stroke-width="1"/>
+</svg>
+</div>
+</div>
+</div>
+
+<hr class="hm-sep">
+
+<!-- Color legend -->
+<div class="help-step" style="margin-bottom:.8rem">
+<span class="help-step-num" style="background:var(--bdr);color:var(--tx2)">&#9734;</span>
+<span class="help-step-title">데이터 색상 구분</span>
+<div class="help-step-desc" style="margin-top:.5rem">
+<span style="color:#4a9eff;font-weight:700">&#9632; REF-1 (파랑)</span>&emsp;
+<span style="color:#a855f7;font-weight:700">&#9632; REF-2 (보라)</span>&emsp;
+<span style="color:#ef4444;font-weight:700">&#9632; SAMPLE-1 (빨강)</span>&emsp;
+<span style="color:#f59e0b;font-weight:700">&#9632; SAMPLE-2 (주황)</span>
+</div>
+</div>
+
+<div class="help-step" style="margin-bottom:0">
+<span class="help-step-num" style="background:var(--bdr);color:var(--tx2)">&#9734;</span>
+<span class="help-step-title">빠른 팁</span>
+<div class="hm-tip" style="margin-top:.5rem">
+&#8226; <b>로고 클릭</b> &rarr; 페이지 초기화 (새로고침)<br>
+&#8226; <b>COPY 버튼</b> &rarr; 테이블을 탭 구분 텍스트로 복사, Excel에 바로 붙여넣기<br>
+&#8226; 파일을 <b>추가 업로드</b>하면 기존 매칭에 덮어씌워집니다<br>
+&#8226; <b>8개 슬롯 모두</b> 채우지 않아도 분석 가능 (최소 REF+SAMPLE IVL 각 1개)
+</div>
+</div>
+
+<hr class="hm-sep">
+<div style="text-align:center;padding:.3rem 0 .2rem;font-size:.75rem;color:var(--tx2);line-height:1.7">
+문의사항: <b style="color:var(--tx)">전자재료사업부 - 품질보증그룹</b><br>
+<a href="mailto:jhbaik@ltml.co.kr" style="color:var(--acc);text-decoration:none">jhbaik@ltml.co.kr</a>
+</div>
+
+</div><!-- help-body -->
+</div><!-- help-modal -->
+</div><!-- help-overlay -->
 
 <div class="card">
     <h2>FILE UPLOAD</h2>
@@ -741,6 +995,13 @@ window.copyTbl=function(id){
     if(btn){btn.textContent='Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('done')},1500)}
   });
 };
+
+/* ===== HELP MODAL ===== */
+const helpOverlay=$('helpOverlay');
+$('helpBtn').onclick=()=>helpOverlay.classList.add('show');
+$('helpClose').onclick=()=>helpOverlay.classList.remove('show');
+helpOverlay.onclick=e=>{if(e.target===helpOverlay)helpOverlay.classList.remove('show')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')helpOverlay.classList.remove('show')});
 
 init();
 })();
