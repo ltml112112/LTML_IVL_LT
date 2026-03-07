@@ -181,6 +181,39 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
 .hm-sep{border:none;border-top:1px solid var(--bdr);margin:1.2rem 0}
 .hm-tip{background:#1c2333;border:1px solid var(--bdr);border-radius:5px;padding:.5rem .7rem;margin-top:.5rem;font-size:.72rem;color:var(--tx2);line-height:1.5}
 .hm-tip b{color:var(--acc)}
+
+/* History Modal */
+.hist-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:9998;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.hist-overlay.show{opacity:1;pointer-events:auto}
+.hist-modal{background:var(--card);border:1px solid var(--bdr);border-radius:10px;width:92%;max-width:720px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s}
+.hist-overlay.show .hist-modal{transform:translateY(0)}
+.hist-close{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;background:var(--hdr);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.hist-close h3{color:var(--acc);font-size:1rem;margin:0}
+.hist-body{overflow-y:auto;flex:1;padding:.5rem}
+.hist-body::-webkit-scrollbar{width:6px}
+.hist-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.hist-body::-webkit-scrollbar-track{background:transparent}
+.hist-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border:1px solid var(--bdr);border-radius:5px;margin-bottom:.4rem;cursor:pointer;transition:.15s}
+.hist-item:hover{border-color:var(--acc);background:#1c2129}
+.hist-item-info{flex:1;min-width:0}
+.hist-item-label{font-weight:700;color:var(--tx);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-item-meta{color:var(--tx2);font-size:.72rem;margin-top:2px}
+.hist-item-del{background:none;border:1px solid var(--bdr);color:var(--tx2);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:.72rem;flex-shrink:0;font-family:inherit;transition:.15s}
+.hist-item-del:hover{background:var(--red);border-color:var(--red);color:#fff}
+.hist-empty{text-align:center;color:var(--tx2);padding:2rem;font-size:.85rem;line-height:1.7}
+/* Save Modal */
+.save-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:10000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.save-overlay.show{opacity:1;pointer-events:auto}
+.save-modal{background:var(--card);border:1px solid var(--bdr);border-radius:10px;width:92%;max-width:480px;padding:1.5rem;transform:translateY(20px);transition:transform .25s}
+.save-overlay.show .save-modal{transform:translateY(0)}
+.save-modal h3{color:var(--acc);font-size:1rem;margin-bottom:.5rem}
+.save-modal p{color:var(--tx2);font-size:.8rem;margin-bottom:.7rem;line-height:1.6}
+.save-modal input{width:100%;background:var(--input);border:1px solid var(--bdr);color:var(--tx);padding:6px 10px;border-radius:4px;font-family:inherit;font-size:.85rem;outline:none}
+.save-modal input:focus{border-color:var(--acc)}
+.save-btns{display:flex;gap:.5rem;margin-top:.8rem}
+.save-btns .btn{flex:1;font-size:.85rem;padding:.5rem}
+.save-btns .btn.cancel{background:var(--bdr);color:var(--tx2)}
+.save-btns .btn.cancel:hover{background:#484f58}
 </style>
 </head>
 <body>
@@ -189,6 +222,7 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <div class="ci" onclick="location.reload()" style="cursor:pointer"><img src="LT소재 로고(영문).jpg" alt="LT Materials"><span>품질경영팀</span></div>
     <h1>OLED IVL &amp; LT Analyzer</h1>
     <p>Raw Data CSV Upload &rarr; Auto Analysis &rarr; Chart</p>
+    <button class="help-btn" id="histBtn" style="right:85px" onclick="showHist()" title="분석 이력">이력</button>
     <button class="help-btn" id="helpBtn" title="사용 가이드">사용가이드</button>
 </header>
 
@@ -395,6 +429,33 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 </div><!-- help-modal -->
 </div><!-- help-overlay -->
 
+<!-- History Modal -->
+<div class="hist-overlay" id="histOverlay">
+<div class="hist-modal">
+<div class="hist-close">
+  <h3>&#128202; 분석 이력</h3>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <input type="text" id="histSearch" class="ct-ni" placeholder="라벨/날짜 검색..." style="width:180px">
+    <button onclick="closeHist()" style="background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1">&times;</button>
+  </div>
+</div>
+<div class="hist-body" id="histList"></div>
+</div>
+</div><!-- hist-overlay -->
+
+<!-- Save Modal -->
+<div class="save-overlay" id="saveOverlay">
+<div class="save-modal">
+  <h3>&#128190; 분석 결과 저장</h3>
+  <p>이 분석 세션에 대한 메모를 입력하세요<br><small>(샘플명, 날짜, 실험 조건 등 — 이력에서 검색 가능)</small></p>
+  <input type="text" id="saveLabelInp" placeholder="예: T50_260123 Mono G25 Lot#1 vs Ref">
+  <div class="save-btns">
+    <button class="btn" onclick="confirmSave()">저장</button>
+    <button class="btn cancel" onclick="closeSaveModal()">취소</button>
+  </div>
+</div>
+</div><!-- save-overlay -->
+
 <div class="card">
     <h2>FILE UPLOAD</h2>
     <div class="dz" id="dz">
@@ -416,6 +477,10 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 </div>
 
 <div id="res" class="hidden results">
+    <!-- Save Result -->
+    <div class="card" style="padding:.6rem 1rem">
+        <button class="btn" id="saveBtn" style="background:#1f6feb;font-size:.85rem" onclick="showSaveModal()">&#128190; 이 분석 결과 저장</button>
+    </div>
     <!-- IVL -->
     <div class="card">
         <h2>IVL ANALYSIS</h2>
@@ -1143,6 +1208,191 @@ $('helpBtn').onclick=()=>helpOverlay.classList.add('show');
 $('helpClose').onclick=()=>helpOverlay.classList.remove('show');
 helpOverlay.onclick=e=>{if(e.target===helpOverlay)helpOverlay.classList.remove('show')};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')helpOverlay.classList.remove('show')});
+
+/* ===== IndexedDB ===== */
+const DB_NAME='IVLAnalyzerDB',DB_VER=1,STORE_NAME='sessions';
+let _db=null;
+function openDB(){
+  return new Promise((ok,ng)=>{
+    if(_db){ok(_db);return;}
+    const r=indexedDB.open(DB_NAME,DB_VER);
+    r.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains(STORE_NAME))
+        d.createObjectStore(STORE_NAME,{keyPath:'id'}).createIndex('saved_at','saved_at');
+    };
+    r.onsuccess=e=>{_db=e.target.result;ok(_db)};
+    r.onerror=e=>ng(e.target.error);
+  });
+}
+async function saveSession(label){
+  const d=await openDB();
+  const sess={
+    id:crypto.randomUUID(),saved_at:Date.now(),label,
+    files:Object.fromEntries(Object.entries(fm).map(([k,f])=>[k,f.name])),
+    ivl:lastIvl,ltLv:lastLtLv,ltMaxHr:lastLtMaxHr,ltRaw:ltRawG,
+    sumSel:{...sumSel},ivlDP,ltMode,
+    ltState:{...ltState,dsVis:{...ltState.dsVis},dsNames:{...ltState.dsNames}}
+  };
+  return new Promise((ok,ng)=>{
+    const tx=d.transaction(STORE_NAME,'readwrite');
+    tx.objectStore(STORE_NAME).add(sess);
+    tx.oncomplete=()=>ok(sess.id);
+    tx.onerror=e=>ng(e.target.error);
+  });
+}
+async function listSessions(q=''){
+  const d=await openDB();
+  return new Promise((ok,ng)=>{
+    const tx=d.transaction(STORE_NAME,'readonly');
+    const r=tx.objectStore(STORE_NAME).getAll();
+    r.onsuccess=()=>{
+      let all=r.result.sort((a,b)=>b.saved_at-a.saved_at);
+      if(q){const lq=q.toLowerCase();all=all.filter(s=>(s.label||'').toLowerCase().includes(lq)||new Date(s.saved_at).toLocaleString('ko').includes(lq));}
+      ok(all);
+    };
+    r.onerror=e=>ng(e.target.error);
+  });
+}
+async function getSession(id){
+  const d=await openDB();
+  return new Promise((ok,ng)=>{
+    const tx=d.transaction(STORE_NAME,'readonly');
+    const r=tx.objectStore(STORE_NAME).get(id);
+    r.onsuccess=()=>ok(r.result);
+    r.onerror=e=>ng(e.target.error);
+  });
+}
+async function deleteSession(id){
+  const d=await openDB();
+  return new Promise((ok,ng)=>{
+    const tx=d.transaction(STORE_NAME,'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.oncomplete=ok;
+    tx.onerror=e=>ng(e.target.error);
+  });
+}
+
+function loadSession(sess){
+  lastIvl=sess.ivl||{};
+  lastLtLv=sess.ltLv||{};
+  lastLtMaxHr=sess.ltMaxHr||{};
+  sumSel={...(sess.sumSel||{ivl:-1,lt:-1,ivlRec:-1,ltRec:-1})};
+  ivlDP=sess.ivlDP??1;
+  ltMode=sess.ltMode||'low';
+  // Restore file display in grid
+  for(const[k,name]of Object.entries(sess.files||{})){
+    if(!$('s-'+k))continue;
+    $('s-'+k).classList.add('ok');
+    $('f-'+k).textContent=name;$('f-'+k).title=name;
+    $('st-'+k).innerHTML='&#9745;';
+  }
+  // Restore mode buttons
+  $('dpWrap').querySelectorAll('.dp-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.dp)===ivlDP));
+  $('ltModeWrap').querySelectorAll('.dp-btn').forEach(b=>b.classList.toggle('active',b.dataset.ltm===ltMode));
+  // Re-render tables
+  autoRecommend();
+  renderTbl('ivlT',BLOCKS_MAIN,lastIvl,lastLtLv);
+  const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,lastIvl,lastLtLv);
+  $('ivlExCard').classList.toggle('hidden',!exHas);
+  // Restore LT chart
+  const hasLT=Object.keys(sess.ltRaw||{}).some(k=>sess.ltRaw[k].h&&sess.ltRaw[k].h.length>0);
+  if(hasLT){
+    ltRawG=sess.ltRaw;ltLvG=sess.ltLv||{};
+    let mx=0;for(const k in ltRawG)if(ltRawG[k].h&&ltRawG[k].h.length)mx=Math.max(mx,...ltRawG[k].h);
+    ltDataMaxHr=Math.max(Math.ceil(mx/10)*10*2,500);
+    if(sess.ltState){Object.assign(ltState,sess.ltState);ltState.dsVis={...sess.ltState.dsVis};ltState.dsNames={...sess.ltState.dsNames};}
+    for(const k in ltRawG)if(!(k in ltState.dsVis))ltState.dsVis[k]=true;
+    if(ltCI){ltCI.destroy();ltCI=null;}
+    buildCtrl();drawLT();
+    $('ltcCard').classList.remove('hidden');
+  }else{
+    $('ltcCard').classList.add('hidden');
+  }
+  // Restore spectrum chart
+  if(spCI){spCI.destroy();spCI=null;}
+  renderSpec(lastIvl);
+  $('spCard').classList.toggle('hidden',!Object.keys(lastIvl).some(k=>lastIvl[k]?.spec?.length));
+  res.classList.remove('hidden');
+  setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+/* ===== History UI ===== */
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function renderHistList(q=''){
+  const el=$('histList');
+  el.innerHTML='<div class="hist-empty">불러오는 중...</div>';
+  try{
+    const sessions=await listSessions(q);
+    if(!sessions.length){
+      el.innerHTML='<div class="hist-empty">저장된 이력이 없습니다.<br><small>분석 후 "이 분석 결과 저장" 버튼을 눌러 저장하세요.</small></div>';
+      return;
+    }
+    el.innerHTML=sessions.map(s=>{
+      const dt=new Date(s.saved_at).toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const fc=Object.keys(s.files||{}).length;
+      const hasIvl=Object.keys(s.ivl||{}).length>0;
+      const hasLt=Object.keys(s.ltRaw||{}).some(k=>s.ltRaw[k].h&&s.ltRaw[k].h.length>0);
+      const tags=[hasIvl&&'IVL',hasLt&&'LT'].filter(Boolean).join(' + ');
+      return`<div class="hist-item" data-id="${escH(s.id)}"><div class="hist-item-info"><div class="hist-item-label">${escH(s.label||'(라벨 없음)')}</div><div class="hist-item-meta">${dt}&nbsp;&middot;&nbsp;${fc}파일&nbsp;&middot;&nbsp;${tags}</div></div><button class="hist-item-del" data-id="${escH(s.id)}">삭제</button></div>`;
+    }).join('');
+    el.querySelectorAll('.hist-item').forEach(item=>{
+      item.onclick=async function(){await _clickHistItem(this.dataset.id);};
+      item.querySelector('.hist-item-del').onclick=function(e){e.stopPropagation();_histDel(this.dataset.id);};
+    });
+  }catch(e){el.innerHTML='<div class="hist-empty">오류: '+escH(e.message)+'</div>';}
+}
+async function _clickHistItem(id){
+  try{const sess=await getSession(id);if(!sess)return;closeHist();loadSession(sess);}
+  catch(e){alert('불러오기 실패: '+e.message);}
+}
+async function _histDel(id){
+  if(!confirm('이 이력을 삭제하시겠습니까?'))return;
+  try{await deleteSession(id);await renderHistList($('histSearch').value);}
+  catch(e){alert('삭제 실패: '+e.message);}
+}
+function showHist(){
+  $('histOverlay').classList.add('show');
+  renderHistList();
+}
+function closeHist(){$('histOverlay').classList.remove('show');}
+window.showHist=showHist;window.closeHist=closeHist;
+
+function showSaveModal(){
+  if(res.classList.contains('hidden')){alert('분석 결과가 없습니다. 먼저 ANALYZE를 실행하세요.');return;}
+  $('saveOverlay').classList.add('show');
+  const inp=$('saveLabelInp');inp.value='';inp.focus();
+}
+function closeSaveModal(){$('saveOverlay').classList.remove('show');}
+async function confirmSave(){
+  const label=$('saveLabelInp').value.trim()||new Date().toLocaleString('ko-KR');
+  try{
+    await saveSession(label);
+    closeSaveModal();
+    const btn=$('saveBtn');
+    if(btn){btn.textContent='저장됨!';btn.style.background='#238636';
+      setTimeout(()=>{btn.innerHTML='&#128190; 이 분석 결과 저장';btn.style.background='#1f6feb';},1800);}
+  }catch(e){alert('저장 실패: '+e.message);}
+}
+window.showSaveModal=showSaveModal;window.closeSaveModal=closeSaveModal;window.confirmSave=confirmSave;
+
+// History modal: search input, close on overlay/Escape
+document.addEventListener('DOMContentLoaded',()=>{
+  const ho=$('histOverlay'),so=$('saveOverlay');
+  const hs=$('histSearch');
+  if(hs)hs.oninput=function(){renderHistList(this.value);};
+  if(ho)ho.onclick=e=>{if(e.target===ho)closeHist();};
+  if(so)so.onclick=e=>{if(e.target===so)closeSaveModal();};
+  const li=$('saveLabelInp');
+  if(li)li.onkeydown=e=>{if(e.key==='Enter')confirmSave();if(e.key==='Escape')closeSaveModal();};
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if($('saveOverlay').classList.contains('show'))closeSaveModal();
+    else if($('histOverlay').classList.contains('show'))closeHist();
+  }
+});
 
 init();
 })();
