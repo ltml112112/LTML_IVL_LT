@@ -74,6 +74,15 @@ header p{color:var(--tx2);font-size:.8rem}
 .cpb{position:absolute;top:8px;right:8px;background:var(--bdr);border:1px solid #484f58;color:var(--tx2);padding:2px 10px;border-radius:3px;cursor:pointer;font-size:.7rem;font-family:inherit}
 .cpb:hover{background:var(--acc);color:#000}
 .cpb.done{background:#238636;color:#fff}
+.cpb.sum{right:65px;background:#f85149;border-color:#da3633;color:#fff;font-weight:700}
+.cpb.sum:hover{background:#da3633}
+.cpb.sum.done{background:#238636;border-color:#2ea043}
+.sel-tag{display:inline-block;padding:0 5px;border-radius:3px;font-size:.65rem;cursor:pointer;margin-left:4px;border:1.5px solid #484f58;color:var(--tx2);transition:.15s;user-select:none;vertical-align:middle}
+.sel-tag:hover{border-color:#f85149;color:#f85149}
+.sel-tag.rec{border-color:#f85149;border-style:dashed;color:#f85149}
+.sel-tag.act{background:#f85149;border-color:#f85149;color:#fff;font-weight:700}
+.t td.ivl-d{background:rgba(248,81,73,.22)!important;border-color:rgba(248,81,73,.5)!important}
+.t td.lt-sum{background:rgba(88,166,255,.22)!important;border-color:rgba(88,166,255,.5)!important}
 
 /* Chart */
 .ch-wrap{position:relative;height:450px;background:#0d1117;border:1px solid var(--bdr);border-radius:4px;padding:4px;transition:background .2s}
@@ -99,7 +108,7 @@ header p{color:var(--tx2);font-size:.8rem}
 .ch-wrap.sq{max-width:600px;height:600px;margin-left:auto;margin-right:auto}
 
 /* Decimal Precision Selector */
-.dp-wrap{display:inline-flex;align-items:center;gap:6px;position:absolute;top:8px;right:80px}
+.dp-wrap{display:inline-flex;align-items:center;gap:6px;position:absolute;top:8px;right:125px}
 .dp-wrap .dp-label{color:var(--tx2);font-size:.72rem;font-weight:600}
 .dp-btn{background:var(--bdr);border:1px solid #484f58;color:var(--tx2);padding:2px 8px;border-radius:3px;cursor:pointer;font-size:.7rem;font-family:inherit;transition:.15s}
 .dp-btn:hover{background:var(--acc);color:#000}
@@ -277,7 +286,15 @@ Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
 <b>&#128161; 상단 옵션 버튼</b><br>
 &#8226; <b>LT [95~90] [99~96]</b> : 표시할 LT 레벨 범위 전환<br>
 &#8226; <b>소수점 [정수] [1자리] [2자리]</b> : 결과 비율의 소수점 자릿수<br>
-&#8226; <b>COPY</b> : 테이블 내용을 복사하여 Excel에 붙여넣기 가능
+&#8226; <b>COPY</b> : 테이블 전체 내용을 복사하여 Excel에 붙여넣기 가능<br><br>
+<b style="color:var(--red)">요약 COPY</b> — 핵심 데이터만 추출하여 복사 (헤더 1행 + REF 1행 + SAMPLE 1행)<br>
+&nbsp;&nbsp;&#9642; <b>IVL 선택</b> : Result 비율이 전체적으로 100%에 가장 근접한 블록 자동 추천<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(REF1 조합 우선 — REF2가 평균 2% 이상 더 근접할 때만 REF2 선택)<br>
+&nbsp;&nbsp;&#9642; <b>LT 선택</b> : SAMPLE/REF 비율이 가장 낮은 블록 자동 추천,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;양쪽 모두 100hr 이상 측정된 첫 번째 LT 레벨 1개만 복사<br>
+&nbsp;&nbsp;&#9642; 각 블록 헤더의 <b style="color:var(--red)">[IVL]</b> <b style="color:var(--acc)">[LT]</b> 뱃지를 클릭하면 수동으로 변경 가능<br>
+&nbsp;&nbsp;&nbsp;&nbsp;— 실선(solid) 뱃지 = 현재 선택, 점선(dashed) 뱃지 = 자동 추천<br>
+&nbsp;&nbsp;&#9642; 복사될 셀은 <span style="background:rgba(248,81,73,.3);padding:0 3px;border-radius:2px">IVL(빨강)</span> · <span style="background:rgba(88,166,255,.3);padding:0 3px;border-radius:2px">LT(파랑)</span> 하이라이트로 미리 확인 가능
 </div>
 </div>
 
@@ -361,7 +378,8 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 <span class="help-step-title">빠른 팁</span>
 <div class="hm-tip" style="margin-top:.5rem">
 &#8226; <b>로고 클릭</b> &rarr; 페이지 초기화 (새로고침)<br>
-&#8226; <b>COPY 버튼</b> &rarr; 테이블을 탭 구분 텍스트로 복사, Excel에 바로 붙여넣기<br>
+&#8226; <b>COPY 버튼</b> &rarr; 테이블 전체를 탭 구분 텍스트로 복사, Excel에 바로 붙여넣기<br>
+&#8226; <b style="color:var(--red)">요약 버튼</b> &rarr; 핵심 3행(헤더+REF+SAMPLE)만 추출, IVL·LT 블록 독립 선택 가능<br>
 &#8226; 파일을 <b>추가 업로드</b>하면 기존 매칭에 덮어씌워집니다<br>
 &#8226; <b>8개 슬롯 모두</b> 채우지 않아도 분석 가능 (최소 REF+SAMPLE IVL 각 1개)
 </div>
@@ -412,6 +430,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
             <button class="dp-btn active" data-dp="1">1자리</button>
             <button class="dp-btn" data-dp="2">2자리</button>
         </div>
+        <button class="cpb sum" onclick="copySummary()">요약</button>
         <button class="cpb" onclick="copyTbl('ivlT')">COPY</button>
         <div class="tw"><table class="t" id="ivlT"></table></div>
     </div>
@@ -483,6 +502,7 @@ const unm=[];
 let ivlDP=1; /* IVL decimal places: 0=정수, 1=소수1자리, 2=소수2자리 */
 let ltMode='low'; /* 'low'=LT95~90, 'high'=LT99~96 */
 let lastIvl={},lastLtLv={},lastLtMaxHr={};
+let sumSel={ivl:-1,lt:-1,ivlRec:-1,ltRec:-1};
 
 const $=id=>document.getElementById(id);
 const dz=$('dz'),fi=$('fi'),fg=$('fg'),abtn=$('abtn'),res=$('res');
@@ -664,6 +684,7 @@ function bestLT(levels){
 
 function reRenderTbls(){
   if(Object.keys(lastIvl).length||Object.keys(lastLtLv).length){
+    autoRecommend();
     renderTbl('ivlT',BLOCKS_MAIN,lastIvl,lastLtLv);
     const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,lastIvl,lastLtLv);
     $('ivlExCard').classList.toggle('hidden',!exHas);
@@ -681,6 +702,8 @@ async function run(){
       if(S[k].t==='LT'&&pd[k]){ltR[k]=pLT(pd[k]);ltLv[k]=ltAll(ltR[k].h,ltR[k].l);ltD[k]=ltR[k];if(ltR[k].h.length)lastLtMaxHr[k]=ltR[k].h[ltR[k].h.length-1]}
     }
     lastIvl=ivl;lastLtLv=ltLv;
+    sumSel={ivl:-1,lt:-1,ivlRec:-1,ltRec:-1};
+    autoRecommend();
     renderTbl('ivlT',BLOCKS_MAIN,ivl,ltLv);
     const exHas=renderTbl('ivlT2',BLOCKS_EXTRA,ivl,ltLv);
     $('ivlExCard').classList.toggle('hidden',!exHas);
@@ -697,6 +720,7 @@ async function run(){
 /* ===== IVL TABLE ===== */
 function renderTbl(tblId,blocks,ivl,ltLv){
   const t=$(tblId);
+  const isMain=blocks===BLOCKS_MAIN;
   const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
   const hasTime=ltMode==='high';
   const nc=7+curLevels.length+(hasTime?1:0);
@@ -705,26 +729,46 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   if(hasTime)h+='<th>측정시간</th>';
   h+='</tr></thead><tbody>';
   let bi=0;
-  for(const b of blocks){
+  for(let bIdx=0;bIdx<blocks.length;bIdx++){
+    const b=blocks[bIdx];
     const d1=ivl[b.r1],d2=ivl[b.r2];
     if(!d1&&!d2)continue;
     bi++;
     const lv1=ltLv[b.lt1],lv2=ltLv[b.lt2];
     const mh1=lastLtMaxHr[b.lt1],mh2=lastLtMaxHr[b.lt2];
 
-    h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}</td></tr>`;
+    let badges='';
+    if(isMain){
+      const ivlAct=sumSel.ivl===bIdx,ivlRec=sumSel.ivlRec===bIdx&&!ivlAct;
+      const ltAct=sumSel.lt===bIdx,ltRec=sumSel.ltRec===bIdx&&!ltAct;
+      badges=` <span class="sel-tag${ivlAct?' act':ivlRec?' rec':''}" data-bi="${bIdx}" data-st="ivl">IVL</span>`;
+      badges+=` <span class="sel-tag${ltAct?' act':ltRec?' rec':''}" data-bi="${bIdx}" data-st="lt">LT</span>`;
+    }
+    const isIvlSel=isMain&&sumSel.ivl===bIdx;
+    const isLtSel=isMain&&sumSel.lt===bIdx;
+    const ic=isIvlSel?'ivl-d':'';
+    // Find which LT level to highlight (first where both >=100hr)
+    let sumLtLvl=null;
+    if(isLtSel){
+      for(const l of curLevels){
+        const v1=lv1?.[l]?.hr,v2=lv2?.[l]?.hr;
+        if(v1!=null&&v2!=null&&v1>=100&&v2>=100){sumLtLvl=l;break;}
+      }
+    }
+
+    h+=`<tr class="bh"><td colspan="${nc}">${ci(bi)} ${b.lb}${badges}</td></tr>`;
     // Row 1 (raw data – fixed decimals)
     h+=`<tr class="r1"><td>${S[b.r1]?.l||b.r1}</td>`;
-    if(d1)h+=fTd(d1.volt,2,d1.voltR)+fTd(d1.eff,2,d1.effR)+fTd(d1.eqe,2,d1.eqeR)+fTd(d1.cx,3,d1.cxR)+fTd(d1.cy,3,d1.cyR)+`<td>${d1.mwl||'-'}</td>`;
+    if(d1)h+=fTd(d1.volt,2,d1.voltR,ic)+fTd(d1.eff,2,d1.effR,ic)+fTd(d1.eqe,2,d1.eqeR,ic)+fTd(d1.cx,3,d1.cxR,ic)+fTd(d1.cy,3,d1.cyR,ic)+`<td${ic?` class="${ic}"`:''} >${d1.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels){const hr=lv1&&lv1[l]?lv1[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    for(const l of curLevels){const hr=lv1&&lv1[l]?lv1[l].hr:null;const lc=isLtSel&&l===sumLtLvl?'lt-sum':'';h+=`<td${lc?` class="${lc}"`:''} ${hr!=null?'data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
     if(hasTime)h+=`<td${mh1!=null?' data-raw="'+mh1+'"':''}>${mh1!=null?mh1.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Row 2 (raw data – fixed decimals)
     h+=`<tr class="r2"><td>${S[b.r2]?.l||b.r2}</td>`;
-    if(d2)h+=fTd(d2.volt,2,d2.voltR)+fTd(d2.eff,2,d2.effR)+fTd(d2.eqe,2,d2.eqeR)+fTd(d2.cx,3,d2.cxR)+fTd(d2.cy,3,d2.cyR)+`<td>${d2.mwl||'-'}</td>`;
+    if(d2)h+=fTd(d2.volt,2,d2.voltR,ic)+fTd(d2.eff,2,d2.effR,ic)+fTd(d2.eqe,2,d2.eqeR,ic)+fTd(d2.cx,3,d2.cxR,ic)+fTd(d2.cy,3,d2.cyR,ic)+`<td${ic?` class="${ic}"`:''} >${d2.mwl||'-'}</td>`;
     else h+=`<td colspan="6" style="color:var(--tx2)">No file</td>`;
-    for(const l of curLevels){const hr=lv2&&lv2[l]?lv2[l].hr:null;h+=`<td${hr!=null?' data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
+    for(const l of curLevels){const hr=lv2&&lv2[l]?lv2[l].hr:null;const lc=isLtSel&&l===sumLtLvl?'lt-sum':'';h+=`<td${lc?` class="${lc}"`:''} ${hr!=null?'data-raw="'+hr+'"':''}>${hr!=null?hr.toFixed(2):'-'}</td>`;}
     if(hasTime)h+=`<td${mh2!=null?' data-raw="'+mh2+'"':''}>${mh2!=null?mh2.toFixed(1)+'h':'-'}</td>`;
     h+='</tr>';
     // Eval
@@ -749,12 +793,25 @@ function renderTbl(tblId,blocks,ivl,ltLv){
   }
   h+='</tbody>';
   t.innerHTML=h;
+  if(isMain){
+    t.querySelectorAll('.sel-tag').forEach(tag=>{
+      tag.onclick=function(e){
+        e.stopPropagation();
+        const bi=parseInt(this.dataset.bi);
+        const st=this.dataset.st;
+        if(st==='ivl')sumSel.ivl=bi;
+        else sumSel.lt=bi;
+        reRenderTbls();
+      };
+    });
+  }
   return bi>0;
 }
 
-function fTd(v,dp,raw){
-  if(isNaN(v))return'<td>-</td>';
-  return`<td${raw!=null?' data-raw="'+raw+'"':''}>${v.toFixed(dp)}</td>`;
+function fTd(v,dp,raw,cls){
+  const c=cls?` class="${cls}"`:'';
+  if(isNaN(v))return`<td${c}>-</td>`;
+  return`<td${c}${raw!=null?' data-raw="'+raw+'"':''}>${v.toFixed(dp)}</td>`;
 }
 
 function eTd(num,den){
@@ -987,6 +1044,83 @@ function renderSpec(ivl){
     }
   });
 }
+
+/* ===== SUMMARY SELECT ===== */
+function autoRecommend(){
+  // IVL: REF1 combos (idx 0,1) are top priority; use REF2 only if >2% better
+  const scores=[];
+  for(let i=0;i<BLOCKS_MAIN.length;i++){
+    const b=BLOCKS_MAIN[i];
+    const d1=lastIvl[b.r1],d2=lastIvl[b.r2];
+    if(!d1||!d2){scores.push(null);continue;}
+    const devs=[];
+    if(!isNaN(d1.volt)&&!isNaN(d2.volt)&&d2.volt)devs.push(Math.abs(d1.volt/d2.volt*100-100));
+    if(!isNaN(d1.eff)&&!isNaN(d2.eff)&&d1.eff)devs.push(Math.abs(d2.eff/d1.eff*100-100));
+    if(!isNaN(d1.eqe)&&!isNaN(d2.eqe)&&d1.eqe)devs.push(Math.abs(d2.eqe/d1.eqe*100-100));
+    scores.push(devs.length?devs.reduce((a,b)=>a+b,0)/devs.length:null);
+  }
+  let bestRef1=-1,bestRef1Score=Infinity;
+  for(let i=0;i<2;i++){if(scores[i]!=null&&scores[i]<bestRef1Score){bestRef1Score=scores[i];bestRef1=i;}}
+  let bestRef2=-1,bestRef2Score=Infinity;
+  for(let i=2;i<4;i++){if(scores[i]!=null&&scores[i]<bestRef2Score){bestRef2Score=scores[i];bestRef2=i;}}
+  // Only pick REF2 if it's >2% better than best REF1
+  let bestIvl=bestRef1;
+  if(bestRef1<0||(bestRef2>=0&&bestRef2Score<bestRef1Score-2))bestIvl=bestRef2;
+  // LT: block with lowest result % among 100hr+ measurements
+  let bestLt=-1,bestLtPct=Infinity;
+  const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
+  for(let i=0;i<BLOCKS_MAIN.length;i++){
+    const b=BLOCKS_MAIN[i];
+    const lv1=lastLtLv[b.lt1],lv2=lastLtLv[b.lt2];
+    if(!lv1||!lv2)continue;
+    for(const l of curLevels){
+      const v1=lv1[l]?.hr,v2=lv2[l]?.hr;
+      if(v1!=null&&v2!=null&&v1>=100&&v2>=100){
+        const pct=v2/v1*100;
+        if(pct<bestLtPct){bestLtPct=pct;bestLt=i;}
+      }
+    }
+  }
+  sumSel.ivlRec=bestIvl;
+  sumSel.ltRec=bestLt;
+  if(sumSel.ivl===-1)sumSel.ivl=bestIvl;
+  if(sumSel.lt===-1)sumSel.lt=bestLt;
+}
+
+function copySummary(){
+  const ivlB=sumSel.ivl>=0?BLOCKS_MAIN[sumSel.ivl]:null;
+  const ltB=sumSel.lt>=0?BLOCKS_MAIN[sumSel.lt]:null;
+  const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
+  // First LT level where BOTH values >= 100hr
+  let ltLvl=null;
+  if(ltB){
+    const lv1=lastLtLv[ltB.lt1],lv2=lastLtLv[ltB.lt2];
+    for(const l of curLevels){
+      const v1=lv1?.[l]?.hr,v2=lv2?.[l]?.hr;
+      if(v1!=null&&v2!=null&&v1>=100&&v2>=100){ltLvl=l;break;}
+    }
+  }
+  const hdr=['Op.V(V)','EL EFF(cd/A)','EQE(%)','CIE(x)','CIE(y)','MAX 파장'];
+  if(ltLvl!=null)hdr.push('LT('+ltLvl+')');
+  // REF row
+  const row1=[];
+  const d1=ivlB?lastIvl[ivlB.r1]:null;
+  if(d1)row1.push(d1.voltR,d1.effR,d1.eqeR,d1.cxR,d1.cyR,d1.mwl||'');
+  else row1.push('','','','','','');
+  if(ltLvl!=null&&ltB){const v=lastLtLv[ltB.lt1]?.[ltLvl]?.hr;row1.push(v!=null?v.toFixed(2):'');}
+  // SAMPLE row
+  const row2=[];
+  const d2=ivlB?lastIvl[ivlB.r2]:null;
+  if(d2)row2.push(d2.voltR,d2.effR,d2.eqeR,d2.cxR,d2.cyR,d2.mwl||'');
+  else row2.push('','','','','','');
+  if(ltLvl!=null&&ltB){const v=lastLtLv[ltB.lt2]?.[ltLvl]?.hr;row2.push(v!=null?v.toFixed(2):'');}
+  const txt=hdr.join('\t')+'\n'+row1.join('\t')+'\n'+row2.join('\t')+'\n';
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('.cpb.sum');
+    if(btn){btn.textContent='Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='요약';btn.classList.remove('done')},1500)}
+  });
+}
+window.copySummary=copySummary;
 
 /* ===== COPY ===== */
 window.copyTbl=function(id){
