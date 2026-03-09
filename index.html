@@ -1133,7 +1133,7 @@ function autoRecommend(){
   // Step 1: REF1-SAMPLE1 — 모든 비율 97~103% & 파장 ±2nm 이내면 무조건 선택
   const r0=ivlRatios(BLOCKS_MAIN[0]);
   if(r0&&r0.ratios.length&&
-     r0.ratios.every(p=>p>=97&&p<=103)&&
+     r0.ratios.every(p=>p>=96.5&&p<103.5)&&
      (r0.mwlDiff===null||r0.mwlDiff<=2)){
     bestIvl=0;
   } else {
