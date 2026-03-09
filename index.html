@@ -1194,7 +1194,7 @@ function copySummary(){
   if(d2)row2.push(d2.voltR,d2.effR,d2.eqeR,d2.cxR,d2.cyR,d2.mwl||'');
   else row2.push('','','','','','');
   if(ltLvl!=null&&ltB){const v=lastLtLv[ltB.lt2]?.[ltLvl]?.hr;row2.push(v!=null?v.toFixed(2):'');}
-  const txt=hdr.join('\t')+'\n'+row1.join('\t')+'\n'+row2.join('\t')+'\n';
+  const txt=row1.join('\t')+'\n'+row2.join('\t')+'\n';
   navigator.clipboard.writeText(txt).then(()=>{
     const btn=document.querySelector('.cpb.sum');
     if(btn){btn.textContent='Copied!';btn.classList.add('done');setTimeout(()=>{btn.textContent='요약';btn.classList.remove('done')},1500)}
