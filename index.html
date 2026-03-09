@@ -322,7 +322,7 @@ Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
 &#8226; <b>소수점 [정수] [1자리] [2자리]</b> : 결과 비율의 소수점 자릿수<br>
 &#8226; <b>COPY</b> : 테이블 전체 내용을 복사하여 Excel에 붙여넣기 가능<br><br>
 <b style="color:var(--red)">요약 COPY</b> — 핵심 데이터만 추출하여 복사 (헤더 1행 + REF 1행 + SAMPLE 1행)<br>
-&nbsp;&nbsp;&#9642; <b>IVL 선택</b> : REF1-SAMPLE1의 Op.V·EL EFF·EQE·CIE(x)·CIE(y) 5개 항목이 모두 97~103% 이내이고 MAX 파장 차이가 ±2nm 이내이면 REF1-SAMPLE1 자동 선택<br>
+&nbsp;&nbsp;&#9642; <b>IVL 선택</b> : REF1-SAMPLE1의 Op.V·EL EFF·EQE·CIE(x)·CIE(y) 5개 항목이 모두 반올림 후 98~102% 이내이고 MAX 파장 차이가 ±2nm 이내이면 REF1-SAMPLE1 자동 선택<br>
 &nbsp;&nbsp;&nbsp;&nbsp;1개라도 벗어나면 4개 조합(REF1/2 × SAMPLE1/2) 중 5개 비율의 평균편차가 100%에 가장 근접한 조합 선택<br>
 &nbsp;&nbsp;&#9642; <b>LT 선택</b> : SAMPLE/REF 비율이 가장 낮은 블록 자동 추천,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;양쪽 모두 100hr 이상 측정된 첫 번째 LT 레벨 1개만 복사<br>
@@ -1130,7 +1130,7 @@ function autoRecommend(){
   }
 
   let bestIvl=-1;
-  // Step 1: REF1-SAMPLE1 — 모든 비율 97~103% & 파장 ±2nm 이내면 무조건 선택
+  // Step 1: REF1-SAMPLE1 — 반올림 후 98~102% (97.5≤p<102.5) & 파장 ±2nm 이내면 무조건 선택
   const r0=ivlRatios(BLOCKS_MAIN[0]);
   if(r0&&r0.ratios.length&&
      r0.ratios.every(p=>p>=97.5&&p<102.5)&&
