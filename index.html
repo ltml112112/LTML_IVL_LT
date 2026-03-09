@@ -1225,6 +1225,7 @@ function openDB(){
     r.onerror=e=>ng(e.target.error);
   });
 }
+const MAX_SESSIONS=10;
 async function saveSession(label){
   const d=await openDB();
   const sess={
@@ -1234,12 +1235,19 @@ async function saveSession(label){
     sumSel:{...sumSel},ivlDP,ltMode,
     ltState:{...ltState,dsVis:{...ltState.dsVis},dsNames:{...ltState.dsNames}}
   };
-  return new Promise((ok,ng)=>{
+  await new Promise((ok,ng)=>{
     const tx=d.transaction(STORE_NAME,'readwrite');
     tx.objectStore(STORE_NAME).add(sess);
     tx.oncomplete=()=>ok(sess.id);
     tx.onerror=e=>ng(e.target.error);
   });
+  // 최대 저장 건수 초과 시 오래된 항목 자동 삭제
+  const all=await listSessions();
+  if(all.length>MAX_SESSIONS){
+    const toDelete=all.slice(MAX_SESSIONS); // saved_at 내림차순 정렬이므로 뒤쪽이 오래된 것
+    await Promise.all(toDelete.map(s=>deleteSession(s.id)));
+  }
+  return sess.id;
 }
 async function listSessions(q=''){
   const d=await openDB();
