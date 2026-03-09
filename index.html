@@ -1146,10 +1146,10 @@ function autoRecommend(){
       if(avgDev<bestScore){bestScore=avgDev;bestIvl=i;}
     }
   }
-  // LT: block with lowest result % among 100hr+ measurements
+  // LT: REF1-SAMPLE1, REF1-SAMPLE2 중 lowest result % (REF2 사용 블록은 수동 선택)
   let bestLt=-1,bestLtPct=Infinity;
   const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
-  for(let i=0;i<BLOCKS_MAIN.length;i++){
+  for(let i=0;i<2;i++){
     const b=BLOCKS_MAIN[i];
     const lv1=lastLtLv[b.lt1],lv2=lastLtLv[b.lt2];
     if(!lv1||!lv2)continue;
