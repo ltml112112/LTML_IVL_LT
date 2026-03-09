@@ -1146,20 +1146,22 @@ function autoRecommend(){
       if(avgDev<bestScore){bestScore=avgDev;bestIvl=i;}
     }
   }
-  // LT: REF1-SAMPLE1, REF1-SAMPLE2 중 lowest result % (REF2 사용 블록은 수동 선택)
-  let bestLt=-1,bestLtPct=Infinity;
+  // LT: 가장 높은 유효 LT 레벨(v1,v2 모두 ≥100hr)에서 블록 비교 후 lowest % 선택
+  let bestLt=-1;
   const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
-  for(let i=0;i<2;i++){
-    const b=BLOCKS_MAIN[i];
-    const lv1=lastLtLv[b.lt1],lv2=lastLtLv[b.lt2];
-    if(!lv1||!lv2)continue;
-    for(const l of curLevels){
+  for(const l of curLevels){
+    let lvBest=-1,lvBestPct=Infinity;
+    for(let i=0;i<2;i++){
+      const b=BLOCKS_MAIN[i];
+      const lv1=lastLtLv[b.lt1],lv2=lastLtLv[b.lt2];
+      if(!lv1||!lv2)continue;
       const v1=lv1[l]?.hr,v2=lv2[l]?.hr;
       if(v1!=null&&v2!=null&&v1>=100&&v2>=100){
         const pct=v2/v1*100;
-        if(pct<bestLtPct){bestLtPct=pct;bestLt=i;}
+        if(pct<lvBestPct){lvBestPct=pct;lvBest=i;}
       }
     }
+    if(lvBest>=0){bestLt=lvBest;break;}
   }
   sumSel.ivlRec=bestIvl;
   sumSel.ltRec=bestLt;
