@@ -322,8 +322,8 @@ Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
 &#8226; <b>소수점 [정수] [1자리] [2자리]</b> : 결과 비율의 소수점 자릿수<br>
 &#8226; <b>COPY</b> : 테이블 전체 내용을 복사하여 Excel에 붙여넣기 가능<br><br>
 <b style="color:var(--red)">요약 COPY</b> — 핵심 데이터만 추출하여 복사 (헤더 1행 + REF 1행 + SAMPLE 1행)<br>
-&nbsp;&nbsp;&#9642; <b>IVL 선택</b> : Result 비율이 전체적으로 100%에 가장 근접한 블록 자동 추천<br>
-&nbsp;&nbsp;&nbsp;&nbsp;(REF1 조합 우선 — REF2가 평균 2% 이상 더 근접할 때만 REF2 선택)<br>
+&nbsp;&nbsp;&#9642; <b>IVL 선택</b> : REF1-SAMPLE1의 Op.V·EL EFF·EQE·CIE(x)·CIE(y) 5개 항목이 모두 97~103% 이내이고 MAX 파장 차이가 ±2nm 이내이면 REF1-SAMPLE1 자동 선택<br>
+&nbsp;&nbsp;&nbsp;&nbsp;1개라도 벗어나면 4개 조합(REF1/2 × SAMPLE1/2) 중 5개 비율의 평균편차가 100%에 가장 근접한 조합 선택<br>
 &nbsp;&nbsp;&#9642; <b>LT 선택</b> : SAMPLE/REF 비율이 가장 낮은 블록 자동 추천,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;양쪽 모두 100hr 이상 측정된 첫 번째 LT 레벨 1개만 복사<br>
 &nbsp;&nbsp;&#9642; 각 블록 헤더의 <b style="color:var(--red)">[IVL]</b> <b style="color:var(--acc)">[LT]</b> 뱃지를 클릭하면 수동으로 변경 가능<br>
@@ -1114,25 +1114,38 @@ function renderSpec(ivl){
 
 /* ===== SUMMARY SELECT ===== */
 function autoRecommend(){
-  // IVL: REF1 combos (idx 0,1) are top priority; use REF2 only if >2% better
-  const scores=[];
-  for(let i=0;i<BLOCKS_MAIN.length;i++){
-    const b=BLOCKS_MAIN[i];
-    const d1=lastIvl[b.r1],d2=lastIvl[b.r2];
-    if(!d1||!d2){scores.push(null);continue;}
-    const devs=[];
-    if(!isNaN(d1.volt)&&!isNaN(d2.volt)&&d2.volt)devs.push(Math.abs(d1.volt/d2.volt*100-100));
-    if(!isNaN(d1.eff)&&!isNaN(d2.eff)&&d1.eff)devs.push(Math.abs(d2.eff/d1.eff*100-100));
-    if(!isNaN(d1.eqe)&&!isNaN(d2.eqe)&&d1.eqe)devs.push(Math.abs(d2.eqe/d1.eqe*100-100));
-    scores.push(devs.length?devs.reduce((a,b)=>a+b,0)/devs.length:null);
+  // IVL: returns {ratios: [pct,...], mwlDiff: number|null} for a block
+  function ivlRatios(b){
+    const d1=lastIvl[b.r1],d2=lastIvl[b.r2]; // d1=REF, d2=SAMPLE
+    if(!d1||!d2)return null;
+    const ratios=[];
+    if(!isNaN(d1.volt)&&!isNaN(d2.volt)&&d2.volt) ratios.push(d1.volt/d2.volt*100);
+    if(!isNaN(d2.eff) &&!isNaN(d1.eff) &&d1.eff)  ratios.push(d2.eff/d1.eff*100);
+    if(!isNaN(d2.eqe) &&!isNaN(d1.eqe)&&d1.eqe)   ratios.push(d2.eqe/d1.eqe*100);
+    if(!isNaN(d2.cx)  &&!isNaN(d1.cx) &&d1.cx)     ratios.push(d2.cx/d1.cx*100);
+    if(!isNaN(d2.cy)  &&!isNaN(d1.cy) &&d1.cy)     ratios.push(d2.cy/d1.cy*100);
+    const w1=parseInt(d1.mwl)||0,w2=parseInt(d2.mwl)||0;
+    const mwlDiff=w1&&w2?Math.abs(w2-w1):null;
+    return {ratios,mwlDiff};
   }
-  let bestRef1=-1,bestRef1Score=Infinity;
-  for(let i=0;i<2;i++){if(scores[i]!=null&&scores[i]<bestRef1Score){bestRef1Score=scores[i];bestRef1=i;}}
-  let bestRef2=-1,bestRef2Score=Infinity;
-  for(let i=2;i<4;i++){if(scores[i]!=null&&scores[i]<bestRef2Score){bestRef2Score=scores[i];bestRef2=i;}}
-  // Only pick REF2 if it's >2% better than best REF1
-  let bestIvl=bestRef1;
-  if(bestRef1<0||(bestRef2>=0&&bestRef2Score<bestRef1Score-2))bestIvl=bestRef2;
+
+  let bestIvl=-1;
+  // Step 1: REF1-SAMPLE1 — 모든 비율 97~103% & 파장 ±2nm 이내면 무조건 선택
+  const r0=ivlRatios(BLOCKS_MAIN[0]);
+  if(r0&&r0.ratios.length&&
+     r0.ratios.every(p=>p>=97&&p<=103)&&
+     (r0.mwlDiff===null||r0.mwlDiff<=2)){
+    bestIvl=0;
+  } else {
+    // Step 2: 4개 조합 중 비율 5개 평균편차가 가장 작은 블록 선택
+    let bestScore=Infinity;
+    for(let i=0;i<4;i++){
+      const r=ivlRatios(BLOCKS_MAIN[i]);
+      if(!r||!r.ratios.length)continue;
+      const avgDev=r.ratios.reduce((a,v)=>a+Math.abs(v-100),0)/r.ratios.length;
+      if(avgDev<bestScore){bestScore=avgDev;bestIvl=i;}
+    }
+  }
   // LT: block with lowest result % among 100hr+ measurements
   let bestLt=-1,bestLtPct=Infinity;
   const curLevels=ltMode==='high'?LT_LEVELS_HIGH:LT_LEVELS;
