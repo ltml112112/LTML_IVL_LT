@@ -222,7 +222,7 @@ footer{text-align:center;padding:1rem 0;color:var(--tx2);font-size:.8rem}
     <div class="ci" onclick="location.reload()" style="cursor:pointer"><img src="LT소재 로고(영문).jpg" alt="LT Materials"><span>품질경영팀</span></div>
     <h1>OLED IVL &amp; LT Analyzer</h1>
     <p>Raw Data CSV Upload &rarr; Auto Analysis &rarr; Chart</p>
-    <button class="help-btn" id="histBtn" style="right:85px" onclick="showHist()" title="분석 이력">이력</button>
+    <button class="help-btn" id="histBtn" style="right:85px" onclick="showHist()" title="임시저장 목록">임시저장 목록</button>
     <button class="help-btn" id="helpBtn" title="사용 가이드">사용가이드</button>
 </header>
 
@@ -415,7 +415,9 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 &#8226; <b>COPY 버튼</b> &rarr; 테이블 전체를 탭 구분 텍스트로 복사, Excel에 바로 붙여넣기<br>
 &#8226; <b style="color:var(--red)">요약 버튼</b> &rarr; 핵심 3행(헤더+REF+SAMPLE)만 추출, IVL·LT 블록 독립 선택 가능<br>
 &#8226; 파일을 <b>추가 업로드</b>하면 기존 매칭에 덮어씌워집니다<br>
-&#8226; <b>8개 슬롯 모두</b> 채우지 않아도 분석 가능 (최소 REF+SAMPLE IVL 각 1개)
+&#8226; <b>8개 슬롯 모두</b> 채우지 않아도 분석 가능 (최소 REF+SAMPLE IVL 각 1개)<br>
+&#8226; <b style="color:#1f6feb">&#128190; 분석결과 임시저장</b> &rarr; 현재 분석 상태를 브라우저에 저장 (최대 10개, 초과 시 오래된 항목 자동 삭제)<br>
+&#8226; <b>임시저장 목록</b> 버튼 &rarr; 저장된 세션 목록 확인 · 불러오기 · 삭제 가능, 메모로 검색 지원
 </div>
 </div>
 
@@ -433,7 +435,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 <div class="hist-overlay" id="histOverlay">
 <div class="hist-modal">
 <div class="hist-close">
-  <h3>&#128202; 분석 이력</h3>
+  <h3>&#128202; 임시저장 목록</h3>
   <div style="display:flex;align-items:center;gap:.5rem">
     <input type="text" id="histSearch" class="ct-ni" placeholder="라벨/날짜 검색..." style="width:180px">
     <button onclick="closeHist()" style="background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1">&times;</button>
@@ -447,7 +449,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 <div class="save-overlay" id="saveOverlay">
 <div class="save-modal">
   <h3>&#128190; 분석 결과 저장</h3>
-  <p>이 분석 세션에 대한 메모를 입력하세요<br><small>(샘플명, 날짜, 실험 조건 등 — 이력에서 검색 가능)</small></p>
+  <p>이 분석 세션에 대한 메모를 입력하세요<br><small>(샘플명, 날짜, 실험 조건 등 — 임시저장 목록에서 검색 가능)</small></p>
   <input type="text" id="saveLabelInp" placeholder="예: T50_260123 Mono G25 Lot#1 vs Ref">
   <div class="save-btns">
     <button class="btn" onclick="confirmSave()">저장</button>
@@ -479,7 +481,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 <div id="res" class="hidden results">
     <!-- Save Result -->
     <div class="card" style="padding:.6rem 1rem">
-        <button class="btn" id="saveBtn" style="background:#1f6feb;font-size:.85rem" onclick="showSaveModal()">&#128190; 이 분석 결과 저장</button>
+        <button class="btn" id="saveBtn" style="background:#1f6feb;font-size:.85rem" onclick="showSaveModal()">&#128190; 분석결과 임시저장</button>
     </div>
     <!-- IVL -->
     <div class="card">
@@ -1334,7 +1336,7 @@ async function renderHistList(q=''){
   try{
     const sessions=await listSessions(q);
     if(!sessions.length){
-      el.innerHTML='<div class="hist-empty">저장된 이력이 없습니다.<br><small>분석 후 "이 분석 결과 저장" 버튼을 눌러 저장하세요.</small></div>';
+      el.innerHTML='<div class="hist-empty">임시저장된 항목이 없습니다.<br><small>분석 후 "분석결과 임시저장" 버튼을 눌러 저장하세요.</small></div>';
       return;
     }
     el.innerHTML=sessions.map(s=>{
@@ -1356,7 +1358,7 @@ async function _clickHistItem(id){
   catch(e){alert('불러오기 실패: '+e.message);}
 }
 async function _histDel(id){
-  if(!confirm('이 이력을 삭제하시겠습니까?'))return;
+  if(!confirm('이 임시저장을 삭제하시겠습니까?'))return;
   try{await deleteSession(id);await renderHistList($('histSearch').value);}
   catch(e){alert('삭제 실패: '+e.message);}
 }
@@ -1380,7 +1382,7 @@ async function confirmSave(){
     closeSaveModal();
     const btn=$('saveBtn');
     if(btn){btn.textContent='저장됨!';btn.style.background='#238636';
-      setTimeout(()=>{btn.innerHTML='&#128190; 이 분석 결과 저장';btn.style.background='#1f6feb';},1800);}
+      setTimeout(()=>{btn.innerHTML='&#128190; 분석결과 임시저장';btn.style.background='#1f6feb';},1800);}
   }catch(e){alert('저장 실패: '+e.message);}
 }
 window.showSaveModal=showSaveModal;window.closeSaveModal=closeSaveModal;window.confirmSave=confirmSave;
