@@ -321,7 +321,7 @@ Result 행에서 SAMPLE/REF 비율(%)이 표시됩니다.<br><br>
 &#8226; <b>LT [95~90] [99~96]</b> : 표시할 LT 레벨 범위 전환<br>
 &#8226; <b>소수점 [정수] [1자리] [2자리]</b> : 결과 비율의 소수점 자릿수<br>
 &#8226; <b>COPY</b> : 테이블 전체 내용을 복사하여 Excel에 붙여넣기 가능<br><br>
-<b style="color:var(--red)">요약 COPY</b> — 핵심 데이터만 추출하여 복사 (헤더 1행 + REF 1행 + SAMPLE 1행)<br>
+<b style="color:var(--red)">요약 COPY</b> — 핵심 데이터만 추출하여 복사 (REF 1행 + SAMPLE 1행)<br>
 &nbsp;&nbsp;&#9642; <b>IVL 선택</b> : REF1-SAMPLE1의 Op.V·EL EFF·EQE·CIE(x)·CIE(y) 5개 항목이 모두 반올림 후 98~102% 이내이고 MAX 파장 차이가 ±2nm 이내이면 REF1-SAMPLE1 자동 선택<br>
 &nbsp;&nbsp;&nbsp;&nbsp;1개라도 벗어나면 4개 조합(REF1/2 × SAMPLE1/2) 중 5개 비율의 평균편차가 100%에 가장 근접한 조합 선택<br>
 &nbsp;&nbsp;&#9642; <b>LT 선택</b> : SAMPLE/REF 비율이 가장 낮은 블록 자동 추천,<br>
@@ -413,7 +413,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
 <div class="hm-tip" style="margin-top:.5rem">
 &#8226; <b>로고 클릭</b> &rarr; 페이지 초기화 (새로고침)<br>
 &#8226; <b>COPY 버튼</b> &rarr; 테이블 전체를 탭 구분 텍스트로 복사, Excel에 바로 붙여넣기<br>
-&#8226; <b style="color:var(--red)">요약 버튼</b> &rarr; 핵심 3행(헤더+REF+SAMPLE)만 추출, IVL·LT 블록 독립 선택 가능<br>
+&#8226; <b style="color:var(--red)">요약 버튼</b> &rarr; 핵심 2행(REF+SAMPLE)만 추출, IVL·LT 블록 독립 선택 가능<br>
 &#8226; 파일을 <b>추가 업로드</b>하면 기존 매칭에 덮어씌워집니다<br>
 &#8226; <b>8개 슬롯 모두</b> 채우지 않아도 분석 가능 (최소 REF+SAMPLE IVL 각 1개)<br>
 &#8226; <b style="color:#1f6feb">&#128190; 분석결과 임시저장</b> &rarr; 현재 분석 상태를 브라우저에 저장 (최대 10개, 초과 시 오래된 항목 자동 삭제)<br>
@@ -486,7 +486,7 @@ X축: 파장(380~780nm), Y축: 강도(a.u.)
     <!-- IVL -->
     <div class="card">
         <h2>IVL ANALYSIS</h2>
-        <div class="dp-wrap" id="ltModeWrap" style="right:300px">
+        <div class="dp-wrap" id="ltModeWrap" style="right:360px">
             <span class="dp-label">LT</span>
             <button class="dp-btn active" data-ltm="low">95~90</button>
             <button class="dp-btn" data-ltm="high">99~96</button>
